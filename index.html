@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="서버제어">
+  <title>서버제어</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f0f0f;
+      color: #fff;
+      font-family: -apple-system, sans-serif;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    h1 {
+      text-align: center;
+      font-size: 20px;
+      color: #aaa;
+      margin-bottom: 40px;
+      letter-spacing: 2px;
+    }
+    .btn-group {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      margin-bottom: 30px;
+    }
+    .btn {
+      width: 140px;
+      height: 140px;
+      border-radius: 24px;
+      border: none;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-on {
+      background: #00c853;
+      color: #fff;
+    }
+    .btn-off {
+      background: #ff3d00;
+      color: #fff;
+    }
+    .btn:active { transform: scale(0.95); opacity: 0.8; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .status-box {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .status-dot {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #555;
+      margin-right: 8px;
+    }
+    .status-dot.online { background: #00c853; }
+    .status-dot.offline { background: #ff3d00; }
+    .timer {
+      text-align: center;
+      font-size: 48px;
+      font-weight: 200;
+      color: #00c853;
+      margin-bottom: 40px;
+      font-variant-numeric: tabular-nums;
+      display: none;
+    }
+    .links {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .link-btn {
+      display: block;
+      background: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 16px;
+      padding: 20px;
+      text-decoration: none;
+      color: #fff;
+      font-size: 16px;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .link-btn:active { background: #2a2a2a; }
+    .link-btn .label { font-size: 12px; color: #888; margin-top: 4px; }
+    .link-btn.disabled { opacity: 0.3; pointer-events: none; }
+  </style>
+</head>
+<body>
+  <h1>⚡ SERVER CONTROL</h1>
+
+  <div class="status-box">
+    <span class="status-dot" id="dot"></span>
+    <span id="status-text">확인 중...</span>
+  </div>
+
+  <div class="btn-group">
+    <button class="btn btn-on" id="btn-on" onclick="powerOn()">🟢<br>켜기</button>
+    <button class="btn btn-off" id="btn-off" onclick="powerOff()">🔴<br>끄기</button>
+  </div>
+
+  <div class="timer" id="timer">00:00</div>
+
+  <div class="links" id="links">
+    <a href="http://daniel-server.iptime.org:4000" class="link-btn disabled" id="link-erp">
+      🏭 ERP 데모
+      <div class="label">Indonesia ERP</div>
+    </a>
+    <a href="http://daniel-server.iptime.org:8080" class="link-btn disabled" id="link-ai">
+      🤖 AI 모델
+      <div class="label">llama-server API</div>
+    </a>
+    <a href="http://daniel-server.iptime.org/adminer.php" class="link-btn disabled" id="link-db">
+      🗄️ DB 관리
+      <div class="label">Adminer</div>
+    </a>
+  </div>
+
+  <script>
+    const TOKEN = "daniel2024!";
+    const API = "http://daniel-server.iptime.org:5000";
+    const WOL_URL = "http://daniel-server.iptime.org:8088";
+
+    let timerInterval = null;
+    let seconds = 0;
+    let isOnline = false;
+
+    function formatTime(s) {
+      const m = Math.floor(s / 60).toString().padStart(2, '0');
+      const sec = (s % 60).toString().padStart(2, '0');
+      return `${m}:${sec}`;
+    }
+
+    function startTimer() {
+      seconds = 0;
+      const timerEl = document.getElementById('timer');
+      timerEl.style.display = 'block';
+      timerInterval = setInterval(() => {
+        seconds++;
+        timerEl.textContent = formatTime(seconds);
+      }, 1000);
+    }
+
+    function stopTimer() {
+      clearInterval(timerInterval);
+      document.getElementById('timer').style.display = 'none';
+    }
+
+    function setOnline(online) {
+      isOnline = online;
+      const dot = document.getElementById('dot');
+      const text = document.getElementById('status-text');
+      const links = document.querySelectorAll('.link-btn');
+      dot.className = 'status-dot ' + (online ? 'online' : 'offline');
+      text.textContent = online ? '서버 온라인' : '서버 오프라인';
+      links.forEach(l => {
+        if (online) l.classList.remove('disabled');
+        else l.classList.add('disabled');
+      });
+    }
+
+    async function checkStatus() {
+      try {
+        const res = await fetch(API + '/status', { signal: AbortSignal.timeout(3000) });
+        const data = await res.json();
+        if (data.status === 'online') {
+          setOnline(true);
+          stopTimer();
+          return true;
+        }
+      } catch(e) {
+        setOnline(false);
+      }
+      return false;
+    }
+
+    async function powerOn() {
+      if (isOnline) return;
+      startTimer();
+      try {
+        await fetch(API + `/wol?token=${TOKEN}`);
+      } catch(e) {}
+      const poll = setInterval(async () => {
+        const ok = await checkStatus();
+        if (ok) clearInterval(poll);
+      }, 5000);
+    }
+
+    async function powerOff() {
+      //if (!isOnline) return;
+      if (!confirm('서버를 끄시겠습니까?')) return;
+      try {
+        await fetch(API + `/shutdown?token=${TOKEN}`);
+        setOnline(false);
+      } catch(e) {
+        setOnline(false);
+      }
+    }
+
+    // 초기 상태 확인
+    checkStatus();
+    setInterval(checkStatus, 10000);
+  </script>
+</body>
+</html>
