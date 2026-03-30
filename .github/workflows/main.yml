@@ -1,0 +1,13 @@
+name: WoL
+
+on:
+  workflow_dispatch:
+
+jobs:
+  wol:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wake Server
+        run: |
+          SESSION=$(curl -s -c /tmp/c.txt -d "username=admin&passwd=${{ secrets.ROUTER_PW }}" http://daniel-server.iptime.org:8088/sess-bin/login_handler.cgi | grep -o "setCookie('[^']*')" | grep -o "'[^']*'" | tr -d "'")
+          curl -s -b "efm_session_id=$SESSION" -d "tmenu=iframe&smenu=expertconfwollist&nomore=0&act=wake&wakeupchk=50%3AEB%3AF6%3A81%3A55%3AA9" http://daniel-server.iptime.org:8088/sess-bin/timepro.cgi
