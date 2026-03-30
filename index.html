@@ -190,8 +190,8 @@
         await fetch('https://api.github.com/repos/hongdukhwa/server-control/actions/workflows/main.yml/dispatches', {
           method: 'POST',
           headers: {
-            'Authorization': 'token ' + 'ghp_' + 'M2mXCZq1AHjquQCkrRgstr2EckxcK74C8Dan'
-            'Accept': 'application/vnd.github.v3+json',
+            'Authorization': 'token ' + 'ghp_' + 'M2mXCZq1AHjquQCkrRgstr2EckxcK74C8Dan',
+            'Accept': 'application/vnd.github.v3' + '+json',
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({ref: 'main'})
