@@ -187,7 +187,15 @@
       if (isOnline) return;
       startTimer();
       try {
-        await fetch(API + `/wol?token=${TOKEN}`);
+        await fetch('https://api.github.com/repos/hongdukhwa/server-control/actions/workflows/main.yml/dispatches', {
+          method: 'POST',
+          headers: {
+            'Authorization': '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',
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ref: 'main'})
+        });
       } catch(e) {}
       const poll = setInterval(async () => {
         const ok = await checkStatus();
