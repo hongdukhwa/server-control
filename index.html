@@ -11,213 +11,147 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      background: #0f0f0f;
+      background: linear-gradient(160deg, #0d1b4b 0%, #1a2f6e 50%, #0d1b4b 100%);
       color: #fff;
-      font-family: -apple-system, sans-serif;
+      font-family: -apple-system, 'Noto Sans KR', sans-serif;
       min-height: 100vh;
-      padding: 40px 20px;
+      padding: 30px 20px;
     }
-    h1 {
+
+    .status-bar {
+      background: #1c1c2e;
+      border-radius: 10px;
+      padding: 14px 20px;
       text-align: center;
-      font-size: 20px;
-      color: #aaa;
-      margin-bottom: 40px;
-      letter-spacing: 2px;
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: all 0.3s;
     }
-    .btn-group {
+    .status-bar.waiting  { color: #aaa; }
+    .status-bar.online   { color: #00e676; border-color: #00e676; }
+    .status-bar.offline  { color: #ff5252; border-color: #ff5252; }
+
+    .btn-row {
       display: flex;
-      gap: 16px;
-      justify-content: center;
-      margin-bottom: 30px;
+      gap: 10px;
+      margin-bottom: 24px;
     }
     .btn {
-      width: 140px;
-      height: 140px;
-      border-radius: 24px;
+      flex: 1;
+      padding: 18px 0;
       border: none;
+      border-radius: 12px;
       font-size: 18px;
       font-weight: 700;
       cursor: pointer;
-      transition: all 0.2s;
+      letter-spacing: 1px;
+      transition: all 0.15s;
     }
-    .btn-on {
-      background: #00c853;
-      color: #fff;
+    .btn:active { transform: scale(0.96); opacity: 0.85; }
+
+    .btn-on    { background: #e53935; color: #fff; }
+    .btn-check { background: #2e7d32; color: #fff; flex: 0.8; font-size: 14px; }
+    .btn-off   { background: #1565c0; color: #fff; }
+
+    .divider {
+      border: none;
+      border-top: 1px solid rgba(255,255,255,0.15);
+      margin-bottom: 20px;
     }
-    .btn-off {
-      background: #ff3d00;
-      color: #fff;
-    }
-    .btn:active { transform: scale(0.95); opacity: 0.8; }
-    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-    .status-box {
-      text-align: center;
-      margin-bottom: 30px;
-    }
-    .status-dot {
-      display: inline-block;
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: #555;
-      margin-right: 8px;
-    }
-    .status-dot.online { background: #00c853; }
-    .status-dot.offline { background: #ff3d00; }
-    .timer {
-      text-align: center;
-      font-size: 48px;
-      font-weight: 200;
-      color: #00c853;
-      margin-bottom: 40px;
-      font-variant-numeric: tabular-nums;
-      display: none;
-    }
-    .links {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
+
+    .links { display: flex; flex-direction: column; gap: 12px; }
     .link-btn {
       display: block;
-      background: #1e1e1e;
-      border: 1px solid #333;
-      border-radius: 16px;
-      padding: 20px;
-      text-decoration: none;
-      color: #fff;
-      font-size: 16px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 12px;
+      padding: 18px 20px;
       text-align: center;
+      color: #dce3f0;
+      font-size: 15px;
+      font-weight: 500;
+      text-decoration: none;
+      letter-spacing: 0.5px;
       transition: all 0.2s;
     }
-    .link-btn:active { background: #2a2a2a; }
-    .link-btn .label { font-size: 12px; color: #888; margin-top: 4px; }
-    .link-btn.disabled { opacity: 0.3; pointer-events: none; }
+    .link-btn:active { background: rgba(255,255,255,0.15); }
   </style>
 </head>
 <body>
-  <h1>⚡ SERVER CONTROL</h1>
 
-  <div class="status-box">
-    <span class="status-dot" id="dot"></span>
-    <span id="status-text">확인 중...</span>
+  <div class="status-bar waiting" id="status-bar">서버 상태 대기중...</div>
+
+  <div class="btn-row">
+    <button class="btn btn-on"    onclick="powerOn()">켜짐</button>
+    <button class="btn btn-check" onclick="checkStatus()">서버점검</button>
+    <button class="btn btn-off"   onclick="powerOff()">꺼짐</button>
   </div>
 
-  <div class="btn-group">
-    <button class="btn btn-on" id="btn-on" onclick="powerOn()">🟢<br>켜기</button>
-    <button class="btn btn-off" id="btn-off" onclick="powerOff()">🔴<br>끄기</button>
-  </div>
+  <hr class="divider">
 
-  <div class="timer" id="timer">00:00</div>
-
-  <div class="links" id="links">
-    <a href="http://daniel-server.iptime.org:4000" class="link-btn disabled" id="link-erp">
-      🏭 ERP 데모
-      <div class="label">Indonesia ERP</div>
-    </a>
-    <a href="http://daniel-server.iptime.org:8080" class="link-btn disabled" id="link-ai">
-      🤖 AI 모델
-      <div class="label">llama-server API</div>
-    </a>
-    <a href="http://daniel-server.iptime.org/adminer.php" class="link-btn disabled" id="link-db">
-      🗄️ DB 관리
-      <div class="label">Adminer</div>
-    </a>
+  <div class="links">
+    <a href="http://daniel-server.iptime.org:4000" class="link-btn">ERP 프로젝트 데모</a>
+    <a href="http://daniel-server.iptime.org:9000" class="link-btn">영어 프로젝트 데모</a>
+    <a href="#" class="link-btn">세무 프로젝트 데모</a>
+    <a href="#" class="link-btn">경마 프로젝트 데모</a>
   </div>
 
   <script>
     const TOKEN = "daniel2024!";
     const API = "https://daniel-server.iptime.org/api";
-    const WOL_URL = "http://daniel-server.iptime.org:8088";
+    const GH_TOKEN = 'ghp_' + 'M2mXCZq1AHjquQCkrRgstr2EckxcK74C8Dan';
+    const GH_URL = 'https://api.github.com/repos/hongdukhwa/server-control/actions/workflows/main.yml/dispatches';
 
-    let timerInterval = null;
-    let seconds = 0;
-    let isOnline = false;
+    const bar = document.getElementById('status-bar');
 
-    function formatTime(s) {
-      const m = Math.floor(s / 60).toString().padStart(2, '0');
-      const sec = (s % 60).toString().padStart(2, '0');
-      return `${m}:${sec}`;
-    }
-
-    function startTimer() {
-      seconds = 0;
-      const timerEl = document.getElementById('timer');
-      timerEl.style.display = 'block';
-      timerInterval = setInterval(() => {
-        seconds++;
-        timerEl.textContent = formatTime(seconds);
-      }, 1000);
-    }
-
-    function stopTimer() {
-      clearInterval(timerInterval);
-      document.getElementById('timer').style.display = 'none';
-    }
-
-    function setOnline(online) {
-      isOnline = online;
-      const dot = document.getElementById('dot');
-      const text = document.getElementById('status-text');
-      const links = document.querySelectorAll('.link-btn');
-      dot.className = 'status-dot ' + (online ? 'online' : 'offline');
-      text.textContent = online ? '서버 온라인' : '서버 오프라인';
-      links.forEach(l => {
-        if (online) l.classList.remove('disabled');
-        else l.classList.add('disabled');
-      });
+    function setStatus(state) {
+      bar.className = 'status-bar ' + state;
+      if (state === 'waiting') bar.textContent = '서버 상태 대기중...';
+      if (state === 'online')  bar.textContent = '서버 작동중';
+      if (state === 'offline') bar.textContent = '서버 중지중';
     }
 
     async function checkStatus() {
+      setStatus('waiting');
       try {
-        const res = await fetch(API + '/status', { signal: AbortSignal.timeout(3000) });
+        const res = await fetch(API + '/status', { signal: AbortSignal.timeout(4000) });
         const data = await res.json();
-        if (data.status === 'online') {
-          setOnline(true);
-          stopTimer();
-          return true;
-        }
+        setStatus(data.status === 'online' ? 'online' : 'offline');
       } catch(e) {
-        setOnline(false);
+        setStatus('offline');
       }
-      return false;
     }
 
     async function powerOn() {
-      if (isOnline) return;
-      startTimer();
+      if (!confirm('서버를 켜시겠습니까?')) return;
       try {
-        await fetch('https://api.github.com/repos/hongdukhwa/server-control/actions/workflows/main.yml/dispatches', {
+        await fetch(GH_URL, {
           method: 'POST',
           headers: {
-            'Authorization': 'token ' + 'ghp_' + 'Xu3Qx7Fr8csezATdJ7tPAmKwmvdnfS3Gg6T7',
+            'Authorization': 'token ' + GH_TOKEN,
             'Accept': 'application/vnd.github.v3' + '+json',
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({ref: 'main'})
         });
-      } catch(e) {}
-      const poll = setInterval(async () => {
-        const ok = await checkStatus();
-        if (ok) clearInterval(poll);
-      }, 5000);
-    }
-
-    async function powerOff() {
-      //if (!isOnline) return;
-      if (!confirm('서버를 끄시겠습니까?')) return;
-      try {
-        await fetch(API + `/shutdown?token=${TOKEN}`);
-        setOnline(false);
+        alert('켜기 신호를 보냈습니다. 잠시 후 서버점검을 눌러 확인하세요.');
       } catch(e) {
-        setOnline(false);
+        alert('신호 전송 실패');
       }
     }
 
-    // 초기 상태 확인
-    setOnline(false);
-    checkStatus();
-    setInterval(checkStatus, 10000);
+    async function powerOff() {
+      if (!confirm('서버를 끄시겠습니까?')) return;
+      try {
+        await fetch(API + '/shutdown?token=' + TOKEN);
+        setStatus('offline');
+      } catch(e) {
+        setStatus('offline');
+      }
+    }
   </script>
 </body>
 </html>
