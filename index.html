@@ -1,3 +1,4 @@
+cat > /var/www/html/pwa/index.html << 'HTMLEOF'
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -17,7 +18,6 @@
       min-height: 100vh;
       padding: 30px 20px;
     }
-
     .status-bar {
       background: #1c1c2e;
       border-radius: 10px;
@@ -33,12 +33,7 @@
     .status-bar.waiting  { color: #aaa; }
     .status-bar.online   { color: #00e676; border-color: #00e676; }
     .status-bar.offline  { color: #ff5252; border-color: #ff5252; }
-
-    .btn-row {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 24px;
-    }
+    .btn-row { display: flex; gap: 10px; margin-bottom: 24px; }
     .btn {
       flex: 1;
       padding: 18px 0;
@@ -51,17 +46,10 @@
       transition: all 0.15s;
     }
     .btn:active { transform: scale(0.96); opacity: 0.85; }
-
     .btn-on    { background: #e53935; color: #fff; }
     .btn-check { background: #2e7d32; color: #fff; flex: 0.8; font-size: 14px; }
     .btn-off   { background: #1565c0; color: #fff; }
-
-    .divider {
-      border: none;
-      border-top: 1px solid rgba(255,255,255,0.15);
-      margin-bottom: 20px;
-    }
-
+    .divider { border: none; border-top: 1px solid rgba(255,255,255,0.15); margin-bottom: 20px; }
     .links { display: flex; flex-direction: column; gap: 12px; }
     .link-btn {
       display: block;
@@ -97,89 +85,18 @@
       style="flex:1;padding:14px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.2);
       background:rgba(255,255,255,0.08);color:#fff;font-size:15px;outline:none;">
     <button onclick="createProject()"
-    style="padding:14px 20px;border-radius:10px;border:none;background:#7c4dff;
-    color:#fff;font-size:15px;font-weight:700;cursor:pointer;">생성</button>
+      style="padding:14px 20px;border-radius:10px;border:none;background:#7c4dff;
+      color:#fff;font-size:15px;font-weight:700;cursor:pointer;">생성</button>
     <button onclick="deleteProject()"
-    style="padding:14px 20px;border-radius:10px;border:none;background:#e53935;
-    color:#fff;font-size:15px;font-weight:700;cursor:pointer;">삭제</button>
+      style="padding:14px 20px;border-radius:10px;border:none;background:#e53935;
+      color:#fff;font-size:15px;font-weight:700;cursor:pointer;">삭제</button>
   </div>
 
-    <div class="links">
-
-    <a href="https://daniel-server.iptime.org/langflix" class="link-btn">🔗 langflix</a>
+  <div class="links">
+    <a href="https://daniel-server.iptime.org/langflix" class="link-btn">langflix</a>
   </div>
 
   <script>
-
-    async function createProject() {
-      const name = document.getElementById('proj-name').value.trim();
-      if (!name) return alert('이름을 입력하세요');
-      const pw = prompt('비밀번호를 입력하세요');
-      if (pw !== '0444') return alert('비밀번호가 틀렸습니다');
-      try {
-        const res = await fetch('https://daniel-server.iptime.org/api/create-project?token=daniel2024!', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({name})
-        });
-        const data = await res.json();
-        if (data.status === 'ok') {
-          alert(name + ' 생성 완료!');
-          location.reload();
-        } else {
-          alert('오류: ' + JSON.stringify(data));
-        }
-      } catch(e) {
-        alert('서버 연결 실패');
-      }
-    }
-
-    async function deleteProject() {
-      const name = document.getElementById('proj-name').value.trim();
-      if (!name) return alert('이름을 입력하세요');
-      const pw = prompt('비밀번호를 입력하세요');
-      if (pw !== '0444') return alert('비밀번호가 틀렸습니다');
-      if (!confirm(name + ' 를 삭제하시겠습니까?')) return;
-      try {
-        const res = await fetch('https://daniel-server.iptime.org/api/delete-project?token=daniel2024!', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({name})
-        });
-        const data = await res.json();
-        if (data.status === 'ok') {
-          alert(name + ' 삭제 완료!');
-          location.reload();
-        } else {
-          alert('오류: ' + JSON.stringify(data));
-        }
-      } catch(e) {
-        alert('서버 연결 실패');
-      }
-    }
-
-      const name = document.getElementById('proj-name').value.trim();
-      if (!name) return alert('이름을 입력하세요');
-      const pw = prompt('비밀번호를 입력하세요');
-      if (pw !== '0444') return alert('비밀번호가 틀렸습니다');
-      try {
-        const res = await fetch('https://daniel-server.iptime.org/api/create-project?token=daniel2024!', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({name})
-        });
-        const data = await res.json();
-        if (data.status === 'ok') {
-          alert(name + ' 생성 완료!');
-          location.reload();
-        } else {
-          alert('오류: ' + JSON.stringify(data));
-        }
-      } catch(e) {
-        alert('서버 연결 실패');
-      }
-    
-
     const TOKEN = "daniel2024!";
     const API = "https://daniel-server.iptime.org/api";
     const GH_TOKEN = 'ghp_' + 'Xu3Qx7Fr8csezATdJ7tPAmKwmvdnfS3Gg6T7';
@@ -189,7 +106,7 @@
     const btnCheck = document.querySelector('.btn-check');
     let pollInterval = null;
     let pollCount = 0;
-    const MAX_POLL = 12; // 5초 x 12 = 60초
+    const MAX_POLL = 12;
 
     function setStatus(state, msg) {
       bar.className = 'status-bar ' + state;
@@ -201,21 +118,12 @@
     }
 
     function setBtnCheck(active) {
-      if (active) {
-        btnCheck.disabled = false;
-        btnCheck.style.opacity = '1';
-      } else {
-        btnCheck.disabled = true;
-        btnCheck.style.opacity = '0.4';
-      }
+      if (active) { btnCheck.disabled = false; btnCheck.style.opacity = '1'; }
+      else { btnCheck.disabled = true; btnCheck.style.opacity = '0.4'; }
     }
 
     function stopPoll() {
-      if (pollInterval) {
-        clearInterval(pollInterval);
-        pollInterval = null;
-        pollCount = 0;
-      }
+      if (pollInterval) { clearInterval(pollInterval); pollInterval = null; pollCount = 0; }
     }
 
     function startPoll() {
@@ -223,20 +131,13 @@
       pollCount = 0;
       setStatus('checking');
       setBtnCheck(false);
-
       pollInterval = setInterval(async () => {
         pollCount++;
         try {
           const res = await fetch(API + '/status', { signal: AbortSignal.timeout(60000) });
           const data = await res.json();
-          if (data.status === 'online') {
-            stopPoll();
-            setStatus('online');
-            setBtnCheck(true);
-            return;
-          }
+          if (data.status === 'online') { stopPoll(); setStatus('online'); setBtnCheck(true); return; }
         } catch(e) {}
-
         if (pollCount >= MAX_POLL) {
           stopPoll();
           setStatus('offline', '서버가 반응하지 않습니다. 전원 상태를 확인하세요.');
@@ -251,9 +152,7 @@
         const res = await fetch(API + '/status', { signal: AbortSignal.timeout(4000) });
         const data = await res.json();
         setStatus(data.status === 'online' ? 'online' : 'offline');
-      } catch(e) {
-        setStatus('offline');
-      }
+      } catch(e) { setStatus('offline'); }
     }
 
     async function powerOn() {
@@ -263,15 +162,13 @@
           method: 'POST',
           headers: {
             'Authorization': 'token ' + GH_TOKEN,
-            'Accept': 'application/vnd.github.v3' + '+json',
+            'Accept': 'application/vnd.github.v3+json',
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({ref: 'main'})
         });
         startPoll();
-      } catch(e) {
-        alert('신호 전송 실패');
-      }
+      } catch(e) { alert('신호 전송 실패'); }
     }
 
     async function powerOff() {
@@ -279,10 +176,44 @@
       try {
         await fetch(API + '/shutdown?token=' + TOKEN);
         setStatus('offline');
-      } catch(e) {
-        setStatus('offline');
-      }
+      } catch(e) { setStatus('offline'); }
+    }
+
+    async function createProject() {
+      const name = document.getElementById('proj-name').value.trim();
+      if (!name) return alert('이름을 입력하세요');
+      const pw = prompt('비밀번호를 입력하세요');
+      if (pw !== '0444') return alert('비밀번호가 틀렸습니다');
+      try {
+        const res = await fetch(API + '/create-project?token=' + TOKEN, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({name})
+        });
+        const data = await res.json();
+        if (data.status === 'ok') { alert(name + ' 생성 완료!'); location.reload(); }
+        else { alert('오류: ' + JSON.stringify(data)); }
+      } catch(e) { alert('서버 연결 실패'); }
+    }
+
+    async function deleteProject() {
+      const name = document.getElementById('proj-name').value.trim();
+      if (!name) return alert('이름을 입력하세요');
+      const pw = prompt('비밀번호를 입력하세요');
+      if (pw !== '0444') return alert('비밀번호가 틀렸습니다');
+      if (!confirm(name + ' 를 삭제하시겠습니까?')) return;
+      try {
+        const res = await fetch(API + '/delete-project?token=' + TOKEN, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({name})
+        });
+        const data = await res.json();
+        if (data.status === 'ok') { alert(name + ' 삭제 완료!'); location.reload(); }
+        else { alert('오류: ' + JSON.stringify(data)); }
+      } catch(e) { alert('서버 연결 실패'); }
     }
   </script>
 </body>
 </html>
+HTMLEOF
