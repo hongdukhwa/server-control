@@ -92,16 +92,50 @@
 
   <hr class="divider">
 
-  <div class="links">
+  <div style="margin-bottom:16px;display:flex;gap:8px;">
+    <input id="proj-name" type="text" placeholder="프로젝트 이름 입력"
+      style="flex:1;padding:14px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.2);
+      background:rgba(255,255,255,0.08);color:#fff;font-size:15px;outline:none;">
+    <button onclick="createProject()"
+      style="padding:14px 20px;border-radius:10px;border:none;background:#7c4dff;
+      color:#fff;font-size:15px;font-weight:700;cursor:pointer;">생성</button>
+  </div>
+
+    <div class="links">
     <a href="http://daniel-server.iptime.org:4000" class="link-btn">ERP 프로젝트 데모</a>
     <a href="http://daniel-server.iptime.org:9000" class="link-btn">영어 프로젝트 데모</a>
     <a href="#" class="link-btn">세무 프로젝트 데모</a>
     <a href="#" class="link-btn">경마 프로젝트 데모</a>
     <a href="https://daniel-server.iptime.org/langflix-test" class="link-btn">🎬 Langflix Test Project</a>
     <a href="https://daniel-server.iptime.org/tax-test" class="link-btn">💰 Tax Test Project</a>
+    <a href="https://daniel-server.iptime.org/test2" class="link-btn">🧪 Test2</a>
+    <a href="https://daniel-server.iptime.org/test3" class="link-btn">🧪 Test3</a>
+    <a href="https://daniel-server.iptime.org/test4" class="link-btn">🧪 Test4</a>
   </div>
 
   <script>
+
+    async function createProject() {
+      const name = document.getElementById('proj-name').value.trim();
+      if (!name) return alert('이름을 입력하세요');
+      try {
+        const res = await fetch('https://daniel-server.iptime.org/api/create-project?token=daniel2024!', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({name})
+        });
+        const data = await res.json();
+        if (data.status === 'ok') {
+          alert(name + ' 생성 완료!');
+          location.reload();
+        } else {
+          alert('오류: ' + JSON.stringify(data));
+        }
+      } catch(e) {
+        alert('서버 연결 실패');
+      }
+    }
+
     const TOKEN = "daniel2024!";
     const API = "https://daniel-server.iptime.org/api";
     const GH_TOKEN = 'ghp_' + 'Xu3Qx7Fr8csezATdJ7tPAmKwmvdnfS3Gg6T7';
