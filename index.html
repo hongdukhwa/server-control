@@ -102,20 +102,71 @@
   <script>
     const TOKEN = "daniel2024!";
     const API = "https://daniel-server.iptime.org/api";
-    const GH_TOKEN = 'ghp_' + 'Xu3Qx7Fr8csezATdJ7tPAmKwmvdnfS3Gg6T7';
+    const GH_TOKEN = 'ghp_' + 'M2mXCZq1AHjquQCkrRgstr2EckxcK74C8Dan';
     const GH_URL = 'https://api.github.com/repos/hongdukhwa/server-control/actions/workflows/main.yml/dispatches';
 
     const bar = document.getElementById('status-bar');
+    const btnCheck = document.querySelector('.btn-check');
+    let pollInterval = null;
+    let pollCount = 0;
+    const MAX_POLL = 12; // 5초 x 12 = 60초
 
-    function setStatus(state) {
+    function setStatus(state, msg) {
       bar.className = 'status-bar ' + state;
-      if (state === 'waiting') bar.textContent = '서버 상태 대기중...';
-      if (state === 'online')  bar.textContent = '서버 작동중';
-      if (state === 'offline') bar.textContent = '서버 중지중';
+      if (msg) { bar.textContent = msg; return; }
+      if (state === 'waiting')  bar.textContent = '서버 상태 대기중...';
+      if (state === 'online')   bar.textContent = '서버 작동중';
+      if (state === 'offline')  bar.textContent = '서버 중지중';
+      if (state === 'checking') bar.textContent = '서버 상태를 확인중입니다...';
+    }
+
+    function setBtnCheck(active) {
+      if (active) {
+        btnCheck.disabled = false;
+        btnCheck.style.opacity = '1';
+      } else {
+        btnCheck.disabled = true;
+        btnCheck.style.opacity = '0.4';
+      }
+    }
+
+    function stopPoll() {
+      if (pollInterval) {
+        clearInterval(pollInterval);
+        pollInterval = null;
+        pollCount = 0;
+      }
+    }
+
+    function startPoll() {
+      stopPoll();
+      pollCount = 0;
+      setStatus('checking');
+      setBtnCheck(false);
+
+      pollInterval = setInterval(async () => {
+        pollCount++;
+        try {
+          const res = await fetch(API + '/status', { signal: AbortSignal.timeout(4000) });
+          const data = await res.json();
+          if (data.status === 'online') {
+            stopPoll();
+            setStatus('online');
+            setBtnCheck(true);
+            return;
+          }
+        } catch(e) {}
+
+        if (pollCount >= MAX_POLL) {
+          stopPoll();
+          setStatus('offline', '서버가 반응하지 않습니다. 전원 상태를 확인하세요.');
+          setBtnCheck(true);
+        }
+      }, 5000);
     }
 
     async function checkStatus() {
-      setStatus('waiting');
+      setStatus('checking');
       try {
         const res = await fetch(API + '/status', { signal: AbortSignal.timeout(4000) });
         const data = await res.json();
@@ -137,7 +188,7 @@
           },
           body: JSON.stringify({ref: 'main'})
         });
-        alert('켜기 신호를 보냈습니다. 잠시 후 서버점검을 눌러 확인하세요.');
+        startPoll();
       } catch(e) {
         alert('신호 전송 실패');
       }
