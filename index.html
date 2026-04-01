@@ -122,6 +122,8 @@
     async function createProject() {
       const name = document.getElementById('proj-name').value.trim();
       if (!name) return alert('이름을 입력하세요');
+      const pw = prompt('비밀번호를 입력하세요');
+      if (pw !== '0444') return alert('비밀번호가 틀렸습니다');
       try {
         const res = await fetch('https://daniel-server.iptime.org/api/create-project?token=daniel2024!', {
           method: 'POST',
