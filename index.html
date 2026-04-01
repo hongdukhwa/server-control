@@ -97,8 +97,11 @@
       style="flex:1;padding:14px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.2);
       background:rgba(255,255,255,0.08);color:#fff;font-size:15px;outline:none;">
     <button onclick="createProject()"
-      style="padding:14px 20px;border-radius:10px;border:none;background:#7c4dff;
-      color:#fff;font-size:15px;font-weight:700;cursor:pointer;">생성</button>
+    style="padding:14px 20px;border-radius:10px;border:none;background:#7c4dff;
+    color:#fff;font-size:15px;font-weight:700;cursor:pointer;">생성</button>
+    <button onclick="deleteProject()"
+    style="padding:14px 20px;border-radius:10px;border:none;background:#e53935;
+    color:#fff;font-size:15px;font-weight:700;cursor:pointer;">삭제</button>
   </div>
 
     <div class="links">
@@ -125,6 +128,29 @@
   <script>
 
     async function createProject() {
+      async function deleteProject() {
+      const name = document.getElementById('proj-name').value.trim();
+      if (!name) return alert('이름을 입력하세요');
+      const pw = prompt('비밀번호를 입력하세요');
+      if (pw !== '0444') return alert('비밀번호가 틀렸습니다');
+      if (!confirm(name + ' 를 삭제하시겠습니까?')) return;
+      try {
+        const res = await fetch('https://daniel-server.iptime.org/api/delete-project?token=daniel2024!', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({name})
+        });
+        const data = await res.json();
+        if (data.status === 'ok') {
+          alert(name + ' 삭제 완료!');
+          location.reload();
+        } else {
+          alert('오류: ' + JSON.stringify(data));
+        }
+      } catch(e) {
+        alert('서버 연결 실패');
+      }
+    }
       const name = document.getElementById('proj-name').value.trim();
       if (!name) return alert('이름을 입력하세요');
       const pw = prompt('비밀번호를 입력하세요');
