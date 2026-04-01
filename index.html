@@ -8,6 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="서버제어">
   <title>서버제어</title>
   <link rel="manifest" href="manifest.json">
+  
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -65,9 +66,44 @@
       transition: all 0.2s;
     }
     .link-btn:active { background: rgba(255,255,255,0.15); }
+
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.85);
+      z-index: 999;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .overlay.show { display: flex; }
+    .overlay-text {
+      color: #fff;
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 4px solid rgba(255,255,255,0.2);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
   </style>
 </head>
 <body>
+
+   <div class="overlay" id="overlay">
+    <div class="spinner"></div>
+    <div class="overlay-text">GitHub 반영 중...</div>
+    <div class="overlay-text" style="font-size:13px;opacity:0.6;">잠시만 기다려주세요 (약 1분)</div>
+  </div>
 
   <div class="status-bar waiting" id="status-bar">서버 상태 대기중...</div>
 
@@ -192,7 +228,7 @@
           body: JSON.stringify({name})
         });
         const data = await res.json();
-        if (data.status === 'ok') { alert(name + ' 생성 완료!'); location.reload(); }
+        if (data.status === 'ok') { alert(name + ' 생성 완료!'); document.getElementById('overlay').classList.add('show'); setTimeout(() => location.reload(), 60000); }
         else { alert('오류: ' + JSON.stringify(data)); }
       } catch(e) { alert('서버 연결 실패'); }
     }
@@ -210,7 +246,7 @@
           body: JSON.stringify({name})
         });
         const data = await res.json();
-        if (data.status === 'ok') { alert(name + ' 삭제 완료!'); location.reload(); }
+        if (data.status === 'ok') { alert(name + ' 삭제 완료!'); document.getElementById('overlay').classList.add('show'); setTimeout(() => location.reload(), 60000); }
         else { alert('오류: ' + JSON.stringify(data)); }
       } catch(e) { alert('서버 연결 실패'); }
     }
