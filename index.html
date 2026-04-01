@@ -148,7 +148,7 @@
       pollInterval = setInterval(async () => {
         pollCount++;
         try {
-          const res = await fetch(API + '/status', { signal: AbortSignal.timeout(4000) });
+          const res = await fetch(API + '/status', { signal: AbortSignal.timeout(60000) });
           const data = await res.json();
           if (data.status === 'online') {
             stopPoll();
@@ -156,14 +156,16 @@
             setBtnCheck(true);
             return;
           }
-        } catch(e) {}
+        } catch(e) {
+          // timeout or network error
+        }
 
         if (pollCount >= MAX_POLL) {
           stopPoll();
           setStatus('offline', '서버가 반응하지 않습니다. 전원 상태를 확인하세요.');
           setBtnCheck(true);
         }
-      }, 5000);
+      }, 120000);
     }
 
     async function checkStatus() {
