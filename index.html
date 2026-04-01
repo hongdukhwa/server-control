@@ -148,7 +148,7 @@
       pollInterval = setInterval(async () => {
         pollCount++;
         try {
-          const res = await fetch(API + '/status', { signal: AbortSignal.timeout(60000) });
+          const res = await fetch(API + '/status', { signal: AbortSignal.timeout(6000) });
           const data = await res.json();
           if (data.status === 'online') {
             stopPoll();
@@ -165,7 +165,7 @@
           setStatus('offline', '서버가 반응하지 않습니다. 전원 상태를 확인하세요.');
           setBtnCheck(true);
         }
-      }, 120000);
+      }, 12000);
     }
 
     async function checkStatus() {
