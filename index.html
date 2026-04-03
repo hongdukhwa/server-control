@@ -115,6 +115,31 @@
 
   <hr class="divider">
 
+  <!-- 서비스 제어 섹션 -->
+  <div style="margin-bottom:24px;">
+    <div style="color:rgba(255,255,255,0.5);font-size:12px;letter-spacing:1px;margin-bottom:12px;">서비스 제어</div>
+    
+    <!-- Ollama -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+      <div style="width:90px;color:#dce3f0;font-size:14px;font-weight:600;">Ollama</div>
+      <div id="ollama-status" style="width:10px;height:10px;border-radius:50%;background:#555;"></div>
+      <button onclick="serviceCtrl('ollama','start')" style="flex:1;padding:10px;border-radius:8px;border:none;background:#2e7d32;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">시작</button>
+      <button onclick="serviceCtrl('ollama','stop')" style="flex:1;padding:10px;border-radius:8px;border:none;background:#1565c0;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">종료</button>
+      <button onclick="serviceCheck('ollama')" style="flex:0.7;padding:10px;border-radius:8px;border:none;background:#444;color:#fff;font-size:13px;cursor:pointer;">확인</button>
+    </div>
+
+    <!-- ComfyUI -->
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="width:90px;color:#dce3f0;font-size:14px;font-weight:600;">ComfyUI</div>
+      <div id="comfyui-status" style="width:10px;height:10px;border-radius:50%;background:#555;"></div>
+      <button onclick="serviceCtrl('comfyui','start')" style="flex:1;padding:10px;border-radius:8px;border:none;background:#2e7d32;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">시작</button>
+      <button onclick="serviceCtrl('comfyui','stop')" style="flex:1;padding:10px;border-radius:8px;border:none;background:#1565c0;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">종료</button>
+      <button onclick="serviceCheck('comfyui')" style="flex:0.7;padding:10px;border-radius:8px;border:none;background:#444;color:#fff;font-size:13px;cursor:pointer;">확인</button>
+    </div>
+  </div>
+
+  <hr class="divider">
+
   <div style="margin-bottom:16px;display:flex;gap:8px;">
     <input id="proj-name" type="text" placeholder="프로젝트 이름 입력"
       style="flex:1;padding:14px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.2);
@@ -253,6 +278,28 @@
         else { alert('오류: ' + JSON.stringify(data)); }
       } catch(e) { alert('서버 연결 실패'); }
     }
+    async function serviceCtrl(service, action) {
+      if (!confirm(service + ' ' + (action === 'start' ? '시작' : '종료') + '하시겠습니까?')) return;
+      try {
+        await fetch(API + '/' + service + '/' + action + '?token=' + TOKEN);
+        setTimeout(() => serviceCheck(service), 2000);
+      } catch(e) { alert('서버 연결 실패'); }
+    }
+
+    async function serviceCheck(service) {
+      try {
+        const res = await fetch(API + '/' + service + '/status');
+        const data = await res.json();
+        const dot = document.getElementById(service + '-status');
+        dot.style.background = data.status === 'online' ? '#00e676' : '#ff5252';
+      } catch(e) {
+        document.getElementById(service + '-status').style.background = '#ff5252';
+      }
+    }
+
+    // 페이지 로드시 상태 확인
+    serviceCheck('ollama');
+    serviceCheck('comfyui');
   </script>
 </body>
 </html>
