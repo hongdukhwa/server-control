@@ -8,71 +8,24 @@
   <meta name="apple-mobile-web-app-title" content="서버제어">
   <title>서버제어</title>
   <link rel="manifest" href="manifest.json">
-  
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      background: linear-gradient(160deg, #0d1b4b 0%, #1a2f6e 50%, #0d1b4b 100%);
-      color: #fff;
-      font-family: -apple-system, 'Noto Sans KR', sans-serif;
-      min-height: 100vh;
-      padding: 30px 20px;
-    }
-    .status-bar {
-      background: #1c1c2e;
-      border-radius: 10px;
-      padding: 14px 20px;
-      text-align: center;
-      font-size: 16px;
-      font-weight: 600;
-      letter-spacing: 1px;
-      margin-bottom: 20px;
-      border: 1px solid rgba(255,255,255,0.1);
-      transition: all 0.3s;
-    }
-    .status-bar.waiting  { color: #aaa; }
-    .status-bar.online   { color: #00e676; border-color: #00e676; }
-    .status-bar.offline  { color: #ff5252; border-color: #ff5252; }
-    .btn-row { display: flex; gap: 10px; margin-bottom: 24px; }
-    .btn {
-      flex: 1;
-      padding: 18px 0;
-      border: none;
-      border-radius: 12px;
-      font-size: 18px;
-      font-weight: 700;
-      cursor: pointer;
-      letter-spacing: 1px;
-      transition: all 0.15s;
-    }
-    .btn:active { transform: scale(0.96); opacity: 0.85; }
-    .btn-on    { background: #e53935; color: #fff; }
-    .btn-check { background: #2e7d32; color: #fff; flex: 0.8; font-size: 14px; }
-    .btn-off   { background: #1565c0; color: #fff; }
-    .divider { border: none; border-top: 1px solid rgba(255,255,255,0.15); margin-bottom: 20px; }
-    .links { display: flex; flex-direction: column; gap: 12px; }
-    .link-btn {
-      display: block;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 12px;
-      padding: 18px 20px;
-      text-align: center;
-      color: #dce3f0;
-      font-size: 15px;
-      font-weight: 500;
-      text-decoration: none;
-      letter-spacing: 0.5px;
-      transition: all 0.2s;
-    }
-    .link-btn:active { background: rgba(255,255,255,0.15); }
 
+    body {
+      background: #0a0a0f;
+      color: #e0e0f0;
+      font-family: 'Courier New', monospace;
+      min-height: 100vh;
+      padding: 20px 16px 40px;
+    }
+
+    /* 오버레이 */
     .overlay {
       display: none;
       position: fixed;
       top: 0; left: 0;
       width: 100%; height: 100%;
-      background: rgba(0,0,0,0.85);
+      background: rgba(0,0,0,0.92);
       z-index: 999;
       justify-content: center;
       align-items: center;
@@ -81,86 +34,358 @@
     }
     .overlay.show { display: flex; }
     .overlay-text {
-      color: #fff;
-      font-size: 18px;
+      color: #00ff88;
+      font-size: 16px;
       font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .overlay-sub {
+      color: rgba(255,255,255,0.4);
+      font-size: 12px;
       letter-spacing: 1px;
     }
     .spinner {
-      width: 40px; height: 40px;
-      border: 4px solid rgba(255,255,255,0.2);
-      border-top-color: #fff;
+      width: 36px; height: 36px;
+      border: 3px solid rgba(0,255,136,0.2);
+      border-top-color: #00ff88;
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* 헤더 */
+    .header {
+      text-align: center;
+      margin-bottom: 28px;
+      padding-top: 10px;
+    }
+    .header h1 {
+      font-size: 11px;
+      letter-spacing: 4px;
+      color: rgba(255,255,255,0.3);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .server-name {
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 2px;
+    }
+
+    /* 섹션 */
+    .section {
+      margin-bottom: 20px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .section-header {
+      padding: 12px 16px;
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: rgba(255,255,255,0.3);
+      text-transform: uppercase;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    /* 서버 파워 섹션 */
+    .power-section {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+    .power-label {
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: rgba(255,255,255,0.3);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .power-status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #444;
+      transition: background 0.3s;
+      flex-shrink: 0;
+    }
+    .status-dot.online { background: #00ff88; box-shadow: 0 0 8px #00ff88; }
+    .status-dot.offline { background: #ff4455; }
+    .status-dot.checking { background: #ffaa00; animation: pulse 1s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    .status-text {
+      font-size: 13px;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 1px;
+    }
+    .power-btns {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+
+    /* 서비스 행 */
+    .service-row {
+      display: flex;
+      align-items: center;
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      gap: 12px;
+    }
+    .service-row:last-child { border-bottom: none; }
+    .service-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+      width: 88px;
+      flex-shrink: 0;
+      letter-spacing: 0.5px;
+    }
+    .service-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #333;
+      flex-shrink: 0;
+      transition: all 0.3s;
+    }
+    .service-dot.online { background: #00ff88; box-shadow: 0 0 6px #00ff88; }
+    .service-dot.offline { background: #ff4455; }
+    .service-btns {
+      display: flex;
+      gap: 6px;
+      flex: 1;
+    }
+
+    /* 버튼 공통 */
+    .btn {
+      border: none;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: all 0.15s;
+      text-transform: uppercase;
+    }
+    .btn:active { transform: scale(0.95); opacity: 0.8; }
+
+    /* 파워 버튼 */
+    .btn-power-on {
+      background: rgba(0,255,136,0.12);
+      color: #00ff88;
+      border: 1px solid rgba(0,255,136,0.3);
+      padding: 12px 0;
+      font-size: 11px;
+      border-radius: 10px;
+    }
+    .btn-power-on:active { background: rgba(0,255,136,0.25); }
+    .btn-power-check {
+      background: rgba(255,255,255,0.05);
+      color: rgba(255,255,255,0.5);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 12px 0;
+      font-size: 11px;
+      border-radius: 10px;
+    }
+    .btn-power-off {
+      background: rgba(255,68,85,0.12);
+      color: #ff4455;
+      border: 1px solid rgba(255,68,85,0.3);
+      padding: 12px 0;
+      font-size: 11px;
+      border-radius: 10px;
+    }
+    .btn-power-off:active { background: rgba(255,68,85,0.25); }
+
+    /* 서비스 버튼 */
+    .btn-start {
+      background: rgba(0,255,136,0.08);
+      color: #00ff88;
+      border: 1px solid rgba(0,255,136,0.2);
+      padding: 8px 0;
+      font-size: 10px;
+      flex: 1;
+    }
+    .btn-stop {
+      background: rgba(255,68,85,0.08);
+      color: #ff4455;
+      border: 1px solid rgba(255,68,85,0.2);
+      padding: 8px 0;
+      font-size: 10px;
+      flex: 1;
+    }
+    .btn-check {
+      background: rgba(255,255,255,0.04);
+      color: rgba(255,255,255,0.4);
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 8px 0;
+      font-size: 10px;
+      flex: 0.7;
+    }
+
+    /* 프로젝트 섹션 */
+    .proj-section {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+    .proj-label {
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: rgba(255,255,255,0.3);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .proj-input-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 0;
+    }
+    .proj-input {
+      flex: 1;
+      padding: 12px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+      font-size: 13px;
+      font-family: 'Courier New', monospace;
+      outline: none;
+    }
+    .proj-input::placeholder { color: rgba(255,255,255,0.2); }
+    .btn-create {
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1px solid rgba(0,255,136,0.3);
+      background: rgba(0,255,136,0.08);
+      color: #00ff88;
+      font-size: 12px;
+      font-family: 'Courier New', monospace;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 1px;
+    }
+    .btn-delete {
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,68,85,0.3);
+      background: rgba(255,68,85,0.08);
+      color: #ff4455;
+      font-size: 12px;
+      font-family: 'Courier New', monospace;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 1px;
+    }
+
+    /* 링크 */
+    .links { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+    .link-btn {
+      display: block;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 10px;
+      padding: 14px 16px;
+      text-align: center;
+      color: rgba(255,255,255,0.5);
+      font-size: 12px;
+      font-family: 'Courier New', monospace;
+      text-decoration: none;
+      letter-spacing: 1px;
+      transition: all 0.2s;
+    }
+    .link-btn:active { background: rgba(255,255,255,0.08); color: #fff; }
   </style>
 </head>
 <body>
 
-   <div class="overlay" id="overlay">
+  <div class="overlay" id="overlay">
     <div class="spinner"></div>
-    <div class="overlay-text">GitHub 반영 중...</div>
-    <div class="overlay-text" style="font-size:13px;opacity:0.6;">잠시만 기다려주세요 (약 1분)</div>
+    <div class="overlay-text" id="overlay-text">처리중...</div>
+    <div class="overlay-sub" id="overlay-sub">잠시만 기다려주세요</div>
   </div>
 
-  <div class="status-bar waiting" id="status-bar">서버 상태 대기중...</div>
-
-  <div class="btn-row">
-    <button class="btn btn-on"    onclick="powerOn()">켜짐</button>
-    <button class="btn btn-check" onclick="checkStatus()">서버점검</button>
-    <button class="btn btn-off"   onclick="powerOff()">꺼짐</button>
+  <div class="header">
+    <div style="font-size:10px;letter-spacing:4px;color:rgba(255,255,255,0.2);margin-bottom:6px;">HONG SERVER</div>
+    <div class="server-name">CONTROL PANEL</div>
   </div>
 
-  <hr class="divider">
-
-  <!-- 서비스 제어 섹션 -->
-  <div style="margin-bottom:24px;">
-    <div style="color:rgba(255,255,255,0.5);font-size:12px;letter-spacing:1px;margin-bottom:12px;">서비스 제어</div>
-    
-    <!-- Ollama -->
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-      <div style="width:90px;color:#dce3f0;font-size:14px;font-weight:600;">Ollama</div>
-      <div id="ollama-status" style="width:10px;height:10px;border-radius:50%;background:#555;"></div>
-      <button onclick="serviceCtrl('ollama','start')" style="flex:1;padding:10px;border-radius:8px;border:none;background:#2e7d32;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">시작</button>
-      <button onclick="serviceCtrl('ollama','stop')" style="flex:1;padding:10px;border-radius:8px;border:none;background:#1565c0;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">종료</button>
-      <button onclick="serviceCheck('ollama')" style="flex:0.7;padding:10px;border-radius:8px;border:none;background:#444;color:#fff;font-size:13px;cursor:pointer;">확인</button>
+  <!-- 서버 파워 -->
+  <div class="power-section">
+    <div class="power-label">Server Power</div>
+    <div class="power-status">
+      <div class="status-dot" id="server-dot"></div>
+      <div class="status-text" id="server-status-text">상태 확인중...</div>
     </div>
-
-    <!-- ComfyUI -->
-    <div style="display:flex;align-items:center;gap:8px;">
-      <div style="width:90px;color:#dce3f0;font-size:14px;font-weight:600;">ComfyUI</div>
-      <div id="comfyui-status" style="width:10px;height:10px;border-radius:50%;background:#555;"></div>
-      <button onclick="serviceCtrl('comfyui','start')" style="flex:1;padding:10px;border-radius:8px;border:none;background:#2e7d32;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">시작</button>
-      <button onclick="serviceCtrl('comfyui','stop')" style="flex:1;padding:10px;border-radius:8px;border:none;background:#1565c0;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">종료</button>
-      <button onclick="serviceCheck('comfyui')" style="flex:0.7;padding:10px;border-radius:8px;border:none;background:#444;color:#fff;font-size:13px;cursor:pointer;">확인</button>
+    <div class="power-btns">
+      <button class="btn btn-power-on" onclick="powerOn()">🟢 켜기</button>
+      <button class="btn btn-power-check" onclick="checkServerStatus()">확인</button>
+      <button class="btn btn-power-off" onclick="powerOff()">🔴 끄기</button>
     </div>
   </div>
 
-  <hr class="divider">
+  <!-- 서비스 제어 -->
+  <div class="section">
+    <div class="section-header">Services</div>
 
-  <div style="margin-bottom:16px;display:flex;gap:8px;">
-    <input id="proj-name" type="text" placeholder="프로젝트 이름 입력"
-      style="flex:1;padding:14px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.2);
-      background:rgba(255,255,255,0.08);color:#fff;font-size:15px;outline:none;">
-    <button onclick="createProject()"
-      style="padding:14px 20px;border-radius:10px;border:none;background:#7c4dff;
-      color:#fff;font-size:15px;font-weight:700;cursor:pointer;">생성</button>
-    <button onclick="deleteProject()"
-      style="padding:14px 20px;border-radius:10px;border:none;background:#e53935;
-      color:#fff;font-size:15px;font-weight:700;cursor:pointer;">삭제</button>
+    <div class="service-row">
+      <div class="service-name">Ollama</div>
+      <div class="service-dot" id="ollama-dot"></div>
+      <div class="service-btns">
+        <button class="btn btn-start" onclick="serviceCtrl('ollama','start','Ollama 시작중...')">시작</button>
+        <button class="btn btn-stop" onclick="serviceCtrl('ollama','stop','Ollama 종료중...')">종료</button>
+        <button class="btn btn-check" onclick="serviceCheck('ollama')">확인</button>
+      </div>
+    </div>
+
+    <div class="service-row">
+      <div class="service-name">OpenClaw</div>
+      <div class="service-dot" id="openclaw-dot"></div>
+      <div class="service-btns">
+        <button class="btn btn-start" onclick="serviceCtrl('openclaw','start','OpenClaw 시작중...')">시작</button>
+        <button class="btn btn-stop" onclick="serviceCtrl('openclaw','stop','OpenClaw 종료중...')">종료</button>
+        <button class="btn btn-check" onclick="serviceCheck('openclaw')">확인</button>
+      </div>
+    </div>
+
+    <div class="service-row">
+      <div class="service-name">ComfyUI</div>
+      <div class="service-dot" id="comfyui-dot"></div>
+      <div class="service-btns">
+        <button class="btn btn-start" onclick="serviceCtrl('comfyui','start','ComfyUI 시작중...')">시작</button>
+        <button class="btn btn-stop" onclick="serviceCtrl('comfyui','stop','ComfyUI 종료중...')">종료</button>
+        <button class="btn btn-check" onclick="serviceCheck('comfyui')">확인</button>
+      </div>
+    </div>
+
   </div>
 
+  <!-- 프로젝트 관리 -->
+  <div class="proj-section">
+    <div class="proj-label">Project Manager</div>
+    <div class="proj-input-row">
+      <input id="proj-name" type="text" placeholder="프로젝트 이름" class="proj-input">
+      <button class="btn-create" onclick="createProject()">생성</button>
+      <button class="btn-delete" onclick="deleteProject()">삭제</button>
+    </div>
+  </div>
+
+  <!-- 링크 -->
   <div class="links">
-  
-  
-  
-  
-  
     <a href="https://daniel-server.iptime.org/langflix" class="link-btn">🔗 langflix</a>
-  
-    <a href="https://daniel-server.iptime.org/test1" class="link-btn">🔗 test1</a>
   </div>
 
   <script>
@@ -169,61 +394,44 @@
     const GH_TOKEN = 'ghp_' + 'Xu3Qx7Fr8csezATdJ7tPAmKwmvdnfS3Gg6T7';
     const GH_URL = 'https://api.github.com/repos/hongdukhwa/server-control/actions/workflows/main.yml/dispatches';
 
-    const bar = document.getElementById('status-bar');
-    const btnCheck = document.querySelector('.btn-check');
-    let pollInterval = null;
-    let pollCount = 0;
-    const MAX_POLL = 12;
-
-    function setStatus(state, msg) {
-      bar.className = 'status-bar ' + state;
-      if (msg) { bar.textContent = msg; return; }
-      if (state === 'waiting')  bar.textContent = '서버 상태 대기중...';
-      if (state === 'online')   bar.textContent = '서버 작동중';
-      if (state === 'offline')  bar.textContent = '서버 중지중';
-      if (state === 'checking') bar.textContent = '서버 상태를 확인중입니다...';
+    // 오버레이
+    function showOverlay(text, sub) {
+      document.getElementById('overlay-text').textContent = text || '처리중...';
+      document.getElementById('overlay-sub').textContent = sub || '잠시만 기다려주세요';
+      document.getElementById('overlay').classList.add('show');
+    }
+    function hideOverlay() {
+      document.getElementById('overlay').classList.remove('show');
     }
 
-    function setBtnCheck(active) {
-      if (active) { btnCheck.disabled = false; btnCheck.style.opacity = '1'; }
-      else { btnCheck.disabled = true; btnCheck.style.opacity = '0.4'; }
-    }
-
-    function stopPoll() {
-      if (pollInterval) { clearInterval(pollInterval); pollInterval = null; pollCount = 0; }
-    }
-
-    function startPoll() {
-      stopPoll();
-      pollCount = 0;
-      setStatus('checking');
-      setBtnCheck(false);
-      pollInterval = setInterval(async () => {
-        pollCount++;
-        try {
-          const res = await fetch(API + '/status', { signal: AbortSignal.timeout(60000) });
-          const data = await res.json();
-          if (data.status === 'online') { stopPoll(); setStatus('online'); setBtnCheck(true); return; }
-        } catch(e) {}
-        if (pollCount >= MAX_POLL) {
-          stopPoll();
-          setStatus('offline', '서버가 반응하지 않습니다. 전원 상태를 확인하세요.');
-          setBtnCheck(true);
-        }
-      }, 5000);
-    }
-
-    async function checkStatus() {
-      setStatus('checking');
+    // 서버 상태
+    async function checkServerStatus() {
+      const dot = document.getElementById('server-dot');
+      const txt = document.getElementById('server-status-text');
+      dot.className = 'status-dot checking';
+      txt.textContent = '확인중...';
       try {
         const res = await fetch(API + '/status', { signal: AbortSignal.timeout(4000) });
         const data = await res.json();
-        setStatus(data.status === 'online' ? 'online' : 'offline');
-      } catch(e) { setStatus('offline'); }
+        if (data.status === 'online') {
+          dot.className = 'status-dot online';
+          txt.textContent = '서버 작동중';
+        } else {
+          dot.className = 'status-dot offline';
+          txt.textContent = '서버 중지됨';
+        }
+      } catch(e) {
+        dot.className = 'status-dot offline';
+        txt.textContent = '서버 응답없음';
+      }
     }
 
+    // 서버 켜기
+    let pollInterval = null;
+    let pollCount = 0;
     async function powerOn() {
       if (!confirm('서버를 켜시겠습니까?')) return;
+      showOverlay('서버 부팅중...', 'Wake-on-LAN 신호 전송 (약 1분 소요)');
       try {
         await fetch(GH_URL, {
           method: 'POST',
@@ -234,23 +442,87 @@
           },
           body: JSON.stringify({ref: 'main'})
         });
-        startPoll();
-      } catch(e) { alert('신호 전송 실패'); }
+        pollCount = 0;
+        pollInterval = setInterval(async () => {
+          pollCount++;
+          try {
+            const res = await fetch(API + '/status', { signal: AbortSignal.timeout(3000) });
+            const data = await res.json();
+            if (data.status === 'online') {
+              clearInterval(pollInterval);
+              hideOverlay();
+              checkServerStatus();
+              checkAllServices();
+            }
+          } catch(e) {}
+          if (pollCount >= 24) {
+            clearInterval(pollInterval);
+            hideOverlay();
+            alert('서버가 응답하지 않습니다. 전원 상태를 확인하세요.');
+          }
+        }, 5000);
+      } catch(e) {
+        hideOverlay();
+        alert('신호 전송 실패');
+      }
     }
 
+    // 서버 끄기
     async function powerOff() {
       if (!confirm('서버를 끄시겠습니까?')) return;
+      showOverlay('서버 종료중...', '');
       try {
         await fetch(API + '/shutdown?token=' + TOKEN);
-        setStatus('offline');
-      } catch(e) { setStatus('offline'); }
+      } catch(e) {}
+      setTimeout(() => {
+        hideOverlay();
+        checkServerStatus();
+      }, 3000);
     }
 
+    // 서비스 제어
+    async function serviceCtrl(service, action, overlayText) {
+      const actionKo = action === 'start' ? '시작' : '종료';
+      if (!confirm(service + ' ' + actionKo + '하시겠습니까?')) return;
+      showOverlay(overlayText || (service + ' ' + actionKo + '중...'), '');
+      try {
+        await fetch(API + '/' + service + '/' + action + '?token=' + TOKEN);
+        setTimeout(async () => {
+          await serviceCheck(service);
+          hideOverlay();
+        }, 3000);
+      } catch(e) {
+        hideOverlay();
+        alert('서버 연결 실패');
+      }
+    }
+
+    // 서비스 상태 확인
+    async function serviceCheck(service) {
+      const dot = document.getElementById(service + '-dot');
+      try {
+        const res = await fetch(API + '/' + service + '/status');
+        const data = await res.json();
+        dot.className = 'service-dot ' + (data.status === 'online' ? 'online' : 'offline');
+      } catch(e) {
+        dot.className = 'service-dot offline';
+      }
+    }
+
+    // 전체 서비스 상태 확인
+    function checkAllServices() {
+      serviceCheck('ollama');
+      serviceCheck('openclaw');
+      serviceCheck('comfyui');
+    }
+
+    // 프로젝트 생성
     async function createProject() {
       const name = document.getElementById('proj-name').value.trim();
       if (!name) return alert('이름을 입력하세요');
       const pw = prompt('비밀번호를 입력하세요');
       if (pw !== '0444') return alert('비밀번호가 틀렸습니다');
+      showOverlay('프로젝트 생성중...', 'GitHub 반영 중 (약 1분)');
       try {
         const res = await fetch(API + '/create-project?token=' + TOKEN, {
           method: 'POST',
@@ -258,17 +530,26 @@
           body: JSON.stringify({name})
         });
         const data = await res.json();
-        if (data.status === 'ok') { alert(name + ' 생성 완료!'); document.getElementById('overlay').classList.add('show'); setTimeout(() => location.reload(), 60000); }
-        else { alert('오류: ' + JSON.stringify(data)); }
-      } catch(e) { alert('서버 연결 실패'); }
+        if (data.status === 'ok') {
+          setTimeout(() => { hideOverlay(); location.reload(); }, 60000);
+        } else {
+          hideOverlay();
+          alert('오류: ' + JSON.stringify(data));
+        }
+      } catch(e) {
+        hideOverlay();
+        alert('서버 연결 실패');
+      }
     }
 
+    // 프로젝트 삭제
     async function deleteProject() {
       const name = document.getElementById('proj-name').value.trim();
       if (!name) return alert('이름을 입력하세요');
       const pw = prompt('비밀번호를 입력하세요');
       if (pw !== '0444') return alert('비밀번호가 틀렸습니다');
       if (!confirm(name + ' 를 삭제하시겠습니까?')) return;
+      showOverlay('프로젝트 삭제중...', 'GitHub 반영 중 (약 1분)');
       try {
         const res = await fetch(API + '/delete-project?token=' + TOKEN, {
           method: 'POST',
@@ -276,32 +557,21 @@
           body: JSON.stringify({name})
         });
         const data = await res.json();
-        if (data.status === 'ok') { alert(name + ' 삭제 완료!'); document.getElementById('overlay').classList.add('show'); setTimeout(() => location.reload(), 60000); }
-        else { alert('오류: ' + JSON.stringify(data)); }
-      } catch(e) { alert('서버 연결 실패'); }
-    }
-    async function serviceCtrl(service, action) {
-      if (!confirm(service + ' ' + (action === 'start' ? '시작' : '종료') + '하시겠습니까?')) return;
-      try {
-        await fetch(API + '/' + service + '/' + action + '?token=' + TOKEN);
-        setTimeout(() => serviceCheck(service), 2000);
-      } catch(e) { alert('서버 연결 실패'); }
-    }
-
-    async function serviceCheck(service) {
-      try {
-        const res = await fetch(API + '/' + service + '/status');
-        const data = await res.json();
-        const dot = document.getElementById(service + '-status');
-        dot.style.background = data.status === 'online' ? '#00e676' : '#ff5252';
+        if (data.status === 'ok') {
+          setTimeout(() => { hideOverlay(); location.reload(); }, 60000);
+        } else {
+          hideOverlay();
+          alert('오류: ' + JSON.stringify(data));
+        }
       } catch(e) {
-        document.getElementById(service + '-status').style.background = '#ff5252';
+        hideOverlay();
+        alert('서버 연결 실패');
       }
     }
 
     // 페이지 로드시 상태 확인
-    serviceCheck('ollama');
-    serviceCheck('comfyui');
+    checkServerStatus();
+    checkAllServices();
   </script>
 </body>
 </html>
