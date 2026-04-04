@@ -298,22 +298,38 @@
 
     // 서버 상태 업데이트
     function setServerState(online) {
-      const dot = document.getElementById('server-dot');
-      const txt = document.getElementById('server-status-text');
-      const btnOn = document.getElementById('btn-server-on');
-      const btnOff = document.getElementById('btn-server-off');
-      if (online) {
-        dot.className = 'status-dot online';
-        txt.textContent = '서버 작동중 ✓';
-        btnOn.disabled = true;
-        btnOff.disabled = false;
-      } else {
-        dot.className = 'status-dot offline';
-        txt.textContent = '서버 중지됨';
-        btnOn.disabled = false;
-        btnOff.disabled = true;
-      }
-    }
+  const dot = document.getElementById('server-dot');
+  const txt = document.getElementById('server-status-text');
+  const btnOn = document.getElementById('btn-server-on');
+  const btnOff = document.getElementById('btn-server-off');
+  
+  if (online) {
+    dot.className = 'status-dot online';
+    txt.textContent = '서버 작동중 ✓';
+    btnOn.disabled = true;
+    btnOff.disabled = false;
+    ['ollama','openclaw','comfyui'].forEach(s => {
+      document.getElementById(s+'-start').disabled = false;
+      document.getElementById(s+'-stop').disabled = false;
+    });
+    document.getElementById('proj-name').disabled = false;
+    document.querySelector('.btn-create').disabled = false;
+    document.querySelector('.btn-del').disabled = false;
+  } else {
+    dot.className = 'status-dot offline';
+    txt.textContent = '서버 중지됨';
+    btnOn.disabled = false;
+    btnOff.disabled = true;
+    ['ollama','openclaw','comfyui'].forEach(s => {
+      document.getElementById(s+'-start').disabled = true;
+      document.getElementById(s+'-stop').disabled = true;
+      document.getElementById(s+'-dot').className = 'svc-dot';
+    });
+    document.getElementById('proj-name').disabled = true;
+    document.querySelector('.btn-create').disabled = true;
+    document.querySelector('.btn-del').disabled = true;
+  }
+}
 
     async function checkServerStatus() {
       const dot = document.getElementById('server-dot');
