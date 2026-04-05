@@ -3,19 +3,12 @@
    Hong Server Control Panel
    ============================================================ */
 
-/* -------------------------------------------------------
-   [1] 상수 설정 - API 주소, 토큰, 비밀번호
-------------------------------------------------------- */
-const TOKEN = "daniel2024!";           // Flask API 인증 토큰
-const PW = "0444";                     // PWA 버튼 실행 비밀번호
-const API = "https://daniel-server.iptime.org/api";  // Flask API 주소
-const GH_TOKEN = 'ghp_' + 'Xu3Qx7Fr8csezATdJ7tPAmKwmvdnfS3Gg6T7';  // GitHub 토큰 (WoL용)
+const TOKEN = "daniel2024!";
+const PW = "0444";
+const API = "https://daniel-server.iptime.org/api";
+const GH_TOKEN = 'ghp_' + 'Xu3Qx7Fr8csezATdJ7tPAmKwmvdnfS3Gg6T7';
 const GH_URL = 'https://api.github.com/repos/hongdukhwa/server-control/actions/workflows/main.yml/dispatches';
 
-
-/* -------------------------------------------------------
-   [2] 공통 유틸 - 비밀번호 확인, 오버레이 표시/숨김
-------------------------------------------------------- */
 function checkPw(action) {
   const pw = prompt('🔒 비밀번호를 입력하세요\n(' + action + ')');
   return pw === PW;
@@ -31,10 +24,6 @@ function hideOverlay() {
   document.getElementById('overlay').classList.remove('show');
 }
 
-
-/* -------------------------------------------------------
-   [3] 링크 버튼 활성/비활성 - 서버 오프라인시 링크 차단
-------------------------------------------------------- */
 function setLinksState(online) {
   document.querySelectorAll('.link-btn').forEach(el => {
     el.style.pointerEvents = online ? '' : 'none';
@@ -42,10 +31,6 @@ function setLinksState(online) {
   });
 }
 
-
-/* -------------------------------------------------------
-   [4] 서버 상태 반영 - 온라인/오프라인에 따라 전체 버튼 활성/비활성
-------------------------------------------------------- */
 function setServerState(online) {
   const dot = document.getElementById('server-dot');
   const txt = document.getElementById('server-status-text');
@@ -57,7 +42,7 @@ function setServerState(online) {
     txt.textContent = '서버 작동중 ✓';
     btnOn.disabled = true;
     btnOff.disabled = false;
-    ['ollama','openclaw','comfyui'].forEach(s => {
+    ['nginx','ollama','openclaw','comfyui'].forEach(s => {
       document.getElementById(s+'-start').disabled = false;
       document.getElementById(s+'-stop').disabled = false;
     });
@@ -70,7 +55,7 @@ function setServerState(online) {
     txt.textContent = '서버 중지됨';
     btnOn.disabled = false;
     btnOff.disabled = true;
-    ['ollama','openclaw','comfyui'].forEach(s => {
+    ['nginx','ollama','openclaw','comfyui'].forEach(s => {
       document.getElementById(s+'-start').disabled = true;
       document.getElementById(s+'-stop').disabled = true;
       document.getElementById(s+'-dot').className = 'svc-dot';
@@ -82,10 +67,6 @@ function setServerState(online) {
   }
 }
 
-
-/* -------------------------------------------------------
-   [5] 서버 상태 확인 - API /status 호출
-------------------------------------------------------- */
 async function checkServerStatus() {
   const dot = document.getElementById('server-dot');
   const txt = document.getElementById('server-status-text');
@@ -102,10 +83,6 @@ async function checkServerStatus() {
   }
 }
 
-
-/* -------------------------------------------------------
-   [6] 서비스 상태 반영 - 온라인/오프라인에 따라 시작/종료 버튼 전환
-------------------------------------------------------- */
 function setSvcState(service, online) {
   const dot = document.getElementById(service + '-dot');
   const btnStart = document.getElementById(service + '-start');
@@ -115,10 +92,6 @@ function setSvcState(service, online) {
   if (btnStop) btnStop.disabled = !online;
 }
 
-
-/* -------------------------------------------------------
-   [7] 개별 서비스 상태 확인 - API /{service}/status 호출
-------------------------------------------------------- */
 async function serviceCheck(service) {
   const dot = document.getElementById(service + '-dot');
   dot.className = 'svc-dot checking';
@@ -131,17 +104,13 @@ async function serviceCheck(service) {
   }
 }
 
-// 전체 서비스 일괄 확인
 function checkAllServices() {
+  serviceCheck('nginx');
   serviceCheck('ollama');
   serviceCheck('openclaw');
   serviceCheck('comfyui');
 }
 
-
-/* -------------------------------------------------------
-   [8] 서버 켜기 - GitHub Actions WoL 트리거 + 부팅 대기 폴링
-------------------------------------------------------- */
 let pollInterval = null, pollCount = 0;
 
 async function powerOn() {
@@ -183,10 +152,6 @@ async function powerOn() {
   }
 }
 
-
-/* -------------------------------------------------------
-   [9] 서버 끄기 - API /shutdown 호출
-------------------------------------------------------- */
 async function powerOff() {
   if (!checkPw('서버 끄기')) return;
   showOverlay('서버 종료중...', '');
@@ -194,10 +159,34 @@ async function powerOff() {
   setTimeout(() => { hideOverlay(); setServerState(false); }, 4000);
 }
 
+/* ollama 종료 - openclaw 먼저 종료 후 ollama 종료 */
+async function ollamaStop() {
+  if (!checkPw('Ollama 종료')) return;
+  showOverlay('Ollama 종료중...', 'OpenClaw 먼저 종료 후 Ollama 종료');
+  try {
+    // openclaw 상태 확인
+    const res = await fetch(API + '/openclaw/status', { signal: AbortSignal.timeout(4000) });
+    const data = await res.json();
+    if (data.status === 'online') {
+      // openclaw 먼저 종료
+      await fetch(API + '/openclaw/stop?token=' + TOKEN);
+      await new Promise(r => setTimeout(r, 3000));
+      setSvcState('openclaw', false);
+    }
+  } catch(e) {}
+  // ollama 종료
+  try {
+    await fetch(API + '/ollama/stop?token=' + TOKEN);
+    setTimeout(async () => {
+      await serviceCheck('ollama');
+      hideOverlay();
+    }, 3000);
+  } catch(e) {
+    hideOverlay();
+    alert('서버 연결 실패');
+  }
+}
 
-/* -------------------------------------------------------
-   [10] 서비스 시작/종료 - API /{service}/start|stop 호출
-------------------------------------------------------- */
 async function serviceCtrl(service, action, overlayText) {
   const actionKo = action === 'start' ? '시작' : '종료';
   if (!checkPw(service + ' ' + actionKo)) return;
@@ -214,10 +203,6 @@ async function serviceCtrl(service, action, overlayText) {
   }
 }
 
-
-/* -------------------------------------------------------
-   [11] 프로젝트 생성 - API /create-project 호출 + GitHub 반영
-------------------------------------------------------- */
 async function createProject() {
   const name = document.getElementById('proj-name').value.trim();
   if (!name) return alert('이름을 입력하세요');
@@ -242,10 +227,6 @@ async function createProject() {
   }
 }
 
-
-/* -------------------------------------------------------
-   [12] 프로젝트 삭제 - API /delete-project 호출 + GitHub 반영
-------------------------------------------------------- */
 async function deleteProject() {
   const name = document.getElementById('proj-name').value.trim();
   if (!name) return alert('이름을 입력하세요');
@@ -271,10 +252,6 @@ async function deleteProject() {
   }
 }
 
-
-/* -------------------------------------------------------
-   [13] 페이지 로드 - 서버 및 전체 서비스 상태 자동 확인
-------------------------------------------------------- */
 window.onload = async () => {
   await checkServerStatus();
   checkAllServices();
