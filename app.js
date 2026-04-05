@@ -58,6 +58,7 @@ function setServerState(online) {
     btnOn.disabled = false;
     btnOff.disabled = true;
     document.getElementById('nginx-start').disabled = true;
+    document.getElementById('nginx-dot').className = 'svc-dot';
     document.querySelectorAll('.svc-chk').forEach(btn => btn.disabled = true);
     ['ollama','openclaw','comfyui'].forEach(s => {
       document.getElementById(s+'-start').disabled = true;
