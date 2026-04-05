@@ -43,6 +43,7 @@ function setServerState(online) {
     btnOn.disabled = true;
     btnOff.disabled = false;
     document.getElementById('nginx-start').disabled = false;
+    document.querySelectorAll('.svc-chk').forEach(btn => btn.disabled = false);
     ['ollama','openclaw','comfyui'].forEach(s => {
       document.getElementById(s+'-start').disabled = false;
       document.getElementById(s+'-stop').disabled = false;
@@ -57,6 +58,7 @@ function setServerState(online) {
     btnOn.disabled = false;
     btnOff.disabled = true;
     document.getElementById('nginx-start').disabled = true;
+    document.querySelectorAll('.svc-chk').forEach(btn => btn.disabled = true);
     ['ollama','openclaw','comfyui'].forEach(s => {
       document.getElementById(s+'-start').disabled = true;
       document.getElementById(s+'-stop').disabled = true;
