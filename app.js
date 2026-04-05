@@ -42,7 +42,7 @@ function setServerState(online) {
     txt.textContent = '서버 작동중 ✓';
     btnOn.disabled = true;
     btnOff.disabled = false;
-    ['nginx','ollama','openclaw','comfyui'].forEach(s => {
+    ['ollama','openclaw','comfyui'].forEach(s => {
       document.getElementById(s+'-start').disabled = false;
       document.getElementById(s+'-stop').disabled = false;
     });
@@ -55,7 +55,8 @@ function setServerState(online) {
     txt.textContent = '서버 중지됨';
     btnOn.disabled = false;
     btnOff.disabled = true;
-    ['nginx','ollama','openclaw','comfyui'].forEach(s => {
+    document.getElementById('nginx-start').disabled = true;
+    ['ollama','openclaw','comfyui'].forEach(s => {
       document.getElementById(s+'-start').disabled = true;
       document.getElementById(s+'-stop').disabled = true;
       document.getElementById(s+'-dot').className = 'svc-dot';
