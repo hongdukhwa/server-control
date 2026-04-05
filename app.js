@@ -42,6 +42,7 @@ function setServerState(online) {
     txt.textContent = '서버 작동중 ✓';
     btnOn.disabled = true;
     btnOff.disabled = false;
+    document.getElementById('nginx-start').disabled = false;
     ['ollama','openclaw','comfyui'].forEach(s => {
       document.getElementById(s+'-start').disabled = false;
       document.getElementById(s+'-stop').disabled = false;
