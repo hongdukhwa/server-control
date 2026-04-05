@@ -258,5 +258,4 @@ async function deleteProject() {
 
 window.onload = async () => {
   await checkServerStatus();
-  checkAllServices();
 };
