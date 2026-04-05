@@ -1,0 +1,4 @@
+*.zip
+*.inc
+t node install
+images/flux_*
