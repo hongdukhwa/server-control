@@ -77,7 +77,9 @@ async function checkServerStatus() {
   try {
     const res = await fetch(API + '/status', { signal: AbortSignal.timeout(4000) });
     const data = await res.json();
-    setServerState(data.status === 'online');
+    const online = data.status === 'online';
+    setServerState(online);
+    if (online) checkAllServices();
   } catch(e) {
     setServerState(false);
   }
