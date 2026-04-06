@@ -18,7 +18,7 @@
     <div class="overlay-sub" id="overlay-sub">잠시만 기다려주세요</div>
   </div>
 
-  <div style="text-align:center; color:rgba(255,255,255,0.3); font-size:11px; margin-bottom:8px;">v2026.04.06.03</div>
+  <div style="text-align:center; color:rgba(255,255,255,0.3); font-size:11px; margin-bottom:8px;">v2026.04.06.05</div>
   <div class="card">
     <div class="card-title">Server Power</div>
     <div class="power-inner">
@@ -77,9 +77,7 @@
     <div class="card-title">Project Manager</div>
     <div class="proj-inner">
       <div class="proj-row">
-        <input id="proj-name" type="text" placeholder="프로젝트 이름 입력" class="proj-input" disabled>
-        <button class="btn-create" onclick="createProject()" disabled>생성</button>
-        <button class="btn-del" onclick="deleteProject()" disabled>삭제</button>
+        <button class="btn-create" id="btn-projects" onclick="openProjects()" disabled>📁 프로젝트 보기</button>
       </div>
     </div>
   </div>

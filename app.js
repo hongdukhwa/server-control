@@ -48,9 +48,9 @@ function setServerState(online) {
       document.getElementById(s+'-start').disabled = false;
       document.getElementById(s+'-stop').disabled = false;
     });
-    document.getElementById('proj-name').disabled = false;
-    document.querySelector('.btn-create').disabled = false;
-    document.querySelector('.btn-del').disabled = false;
+    
+    document.getElementById('btn-projects').disabled = false;
+    
     setLinksState(true);
   } else {
     dot.className = 'status-dot offline';
@@ -65,9 +65,9 @@ function setServerState(online) {
       document.getElementById(s+'-stop').disabled = true;
       document.getElementById(s+'-dot').className = 'svc-dot';
     });
-    document.getElementById('proj-name').disabled = true;
-    document.querySelector('.btn-create').disabled = true;
-    document.querySelector('.btn-del').disabled = true;
+    
+    document.getElementById('btn-projects').disabled = true;
+    
     setLinksState(false);
   }
 }
@@ -210,53 +210,10 @@ async function serviceCtrl(service, action, overlayText) {
   }
 }
 
-async function createProject() {
-  const name = document.getElementById('proj-name').value.trim();
-  if (!name) return alert('이름을 입력하세요');
-  if (!checkPw('프로젝트 생성')) return;
-  showOverlay('프로젝트 생성중...', 'GitHub 반영 중 (약 1분)');
-  try {
-    const res = await fetch(API + '/create-project?token=' + TOKEN, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({name})
-    });
-    const data = await res.json();
-    if (data.status === 'ok') {
-      setTimeout(() => { hideOverlay(); location.reload(); }, 60000);
-    } else {
-      hideOverlay();
-      alert('오류: ' + JSON.stringify(data));
-    }
-  } catch(e) {
-    hideOverlay();
-    alert('서버 연결 실패');
-  }
-}
 
-async function deleteProject() {
-  const name = document.getElementById('proj-name').value.trim();
-  if (!name) return alert('이름을 입력하세요');
-  if (!checkPw('프로젝트 삭제')) return;
-  if (!confirm(name + ' 를 정말 삭제하시겠습니까?')) return;
-  showOverlay('프로젝트 삭제중...', 'GitHub 반영 중 (약 1분)');
-  try {
-    const res = await fetch(API + '/delete-project?token=' + TOKEN, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({name})
-    });
-    const data = await res.json();
-    if (data.status === 'ok') {
-      setTimeout(() => { hideOverlay(); location.reload(); }, 60000);
-    } else {
-      hideOverlay();
-      alert('오류: ' + JSON.stringify(data));
-    }
-  } catch(e) {
-    hideOverlay();
-    alert('서버 연결 실패');
-  }
+
+function openProjects() {
+  window.open("https://daniel-server.iptime.org/projects.html", "_blank");
 }
 
 window.onload = async () => {
