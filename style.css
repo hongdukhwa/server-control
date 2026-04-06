@@ -1,7 +1,7 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
   min-height: 100vh;
-  background: linear-gradient(145deg, #1a0533 0%, #2d1065 30%, #1e3a8a 65%, #0f172a 100%);
+  background: #1a1a2e;
   font-family: 'Nunito', sans-serif;
   padding: 20px 16px 50px;
   position: relative;
