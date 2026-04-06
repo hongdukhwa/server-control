@@ -197,6 +197,9 @@ async function ollamaStop() {
       setSvcState('openclaw', false);
     }
   } catch(e) {}
+  // openwebui 종료
+  try { await fetch(API + '/openwebui/stop?token=' + TOKEN); } catch(e) {}
+  setSvcState('openwebui', false);
   // ollama 종료
   try {
     await fetch(API + '/ollama/stop?token=' + TOKEN);

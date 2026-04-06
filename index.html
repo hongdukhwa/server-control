@@ -68,6 +68,15 @@
         <button class="svc-btn svc-chk" onclick="serviceCheck('openclaw')">확인</button>
       </div>
     </div>
+  <div class="service-row">
+      <div class="svc-dot checking" id="openwebui-dot"></div>
+      <div class="svc-name">OpenWebUI</div>
+      <div class="svc-btns">
+        <button class="svc-btn svc-start" id="openwebui-start" onclick="serviceCtrl('openwebui','start','OpenWebUI 시작중...')" disabled>시작</button>
+        <button class="svc-btn svc-stop" id="openwebui-stop" onclick="serviceCtrl('openwebui','stop','OpenWebUI 종료중...')" disabled>종료</button>
+        <button class="svc-btn svc-chk" onclick="serviceCheck('openwebui')">확인</button>
+      </div>
+    </div>
     <div class="service-row">
       <div class="svc-dot checking" id="comfyui-dot"></div>
       <div class="svc-name">ComfyUI</div>
@@ -75,15 +84,6 @@
         <button class="svc-btn svc-start" id="comfyui-start" onclick="serviceCtrl('comfyui','start','ComfyUI 시작중...')" disabled>시작</button>
         <button class="svc-btn svc-stop" id="comfyui-stop" onclick="serviceCtrl('comfyui','stop','ComfyUI 종료중...')" disabled>종료</button>
         <button class="svc-btn svc-chk" onclick="serviceCheck('comfyui')">확인</button>
-      </div>
-    </div>
-    <div class="service-row">
-      <div class="svc-dot checking" id="openwebui-dot"></div>
-      <div class="svc-name">OpenWebUI</div>
-      <div class="svc-btns">
-        <button class="svc-btn svc-start" id="openwebui-start" onclick="serviceCtrl('openwebui','start','OpenWebUI 시작중...')" disabled>시작</button>
-        <button class="svc-btn svc-stop" id="openwebui-stop" onclick="serviceCtrl('openwebui','stop','OpenWebUI 종료중...')" disabled>종료</button>
-        <button class="svc-btn svc-chk" onclick="serviceCheck('openwebui')">확인</button>
       </div>
     </div>
   </div>
