@@ -50,6 +50,7 @@ function setServerState(online) {
     });
     
     document.getElementById('btn-projects').disabled = false;
+    document.getElementById('btn-webui').disabled = false;
     
     setLinksState(true);
   } else {
@@ -67,6 +68,7 @@ function setServerState(online) {
     });
     
     document.getElementById('btn-projects').disabled = true;
+    document.getElementById('btn-webui').disabled = true;
     
     setLinksState(false);
   }
@@ -211,6 +213,10 @@ async function serviceCtrl(service, action, overlayText) {
 }
 
 
+
+function openWebUI() {
+  window.open("http://192.168.0.20:3000", "_blank");
+}
 
 function openProjects() {
   window.open("https://daniel-server.iptime.org/project/project.html", "_blank");
