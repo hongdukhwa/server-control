@@ -213,7 +213,7 @@ async function serviceCtrl(service, action, overlayText) {
 
 
 function openProjects() {
-  window.open("https://daniel-server.iptime.org/projects.html", "_blank");
+  window.open("https://daniel-server.iptime.org/project/project.html", "_blank");
 }
 
 window.onload = async () => {
