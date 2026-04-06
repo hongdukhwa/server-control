@@ -44,7 +44,7 @@ function setServerState(online) {
     btnOff.disabled = false;
     document.getElementById('nginx-start').disabled = false;
     document.querySelectorAll('.svc-chk').forEach(btn => btn.disabled = false);
-    ['ollama','openclaw','comfyui'].forEach(s => {
+    ['ollama','openclaw','comfyui','openwebui'].forEach(s => {
       document.getElementById(s+'-start').disabled = false;
       document.getElementById(s+'-stop').disabled = false;
     });
@@ -61,7 +61,7 @@ function setServerState(online) {
     document.getElementById('nginx-start').disabled = true;
     document.getElementById('nginx-dot').className = 'svc-dot';
     document.querySelectorAll('.svc-chk').forEach(btn => btn.disabled = true);
-    ['ollama','openclaw','comfyui'].forEach(s => {
+    ['ollama','openclaw','comfyui','openwebui'].forEach(s => {
       document.getElementById(s+'-start').disabled = true;
       document.getElementById(s+'-stop').disabled = true;
       document.getElementById(s+'-dot').className = 'svc-dot';
@@ -72,6 +72,18 @@ function setServerState(online) {
     
     setLinksState(false);
   }
+}
+
+
+async function updateVram() {
+  try {
+    const res = await fetch(API + '/vram', { signal: AbortSignal.timeout(3000) });
+    const d = await res.json();
+    const gb = v => (v/1024).toFixed(1) + 'GB';
+    document.getElementById('vram-total').textContent = '전체 ' + gb(d.total);
+    document.getElementById('vram-used').textContent = '사용 ' + gb(d.used);
+    document.getElementById('vram-free').textContent = '잔여 ' + gb(d.free);
+  } catch(e) {}
 }
 
 async function checkServerStatus() {
@@ -118,6 +130,8 @@ function checkAllServices() {
   serviceCheck('ollama');
   serviceCheck('openclaw');
   serviceCheck('comfyui');
+  serviceCheck('openwebui');
+  updateVram();
 }
 
 let pollInterval = null, pollCount = 0;
@@ -204,6 +218,7 @@ async function serviceCtrl(service, action, overlayText) {
     await fetch(API + '/' + service + '/' + action + '?token=' + TOKEN);
     setTimeout(async () => {
       await serviceCheck(service);
+      await updateVram();
       hideOverlay();
     }, 3000);
   } catch(e) {
