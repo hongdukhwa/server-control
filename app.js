@@ -5,7 +5,7 @@
 
 const TOKEN = "daniel2024!";
 const PW = "0444";
-const API = "https://daniel-server.iptime.org/api";
+const API = "https://honglab.store/api";
 const GH_TOKEN = 'ghp_' + 'Xu3Qx7Fr8csezATdJ7tPAmKwmvdnfS3Gg6T7';
 const GH_URL = 'https://api.github.com/repos/hongdukhwa/server-control/actions/workflows/main.yml/dispatches';
 
