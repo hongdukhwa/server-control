@@ -237,7 +237,7 @@ function openWebUI() {
 }
 
 function openProjects() {
-  window.open("https://daniel-server.iptime.org/project/project.html", "_blank");
+  window.open("https://honglab.store/project/project.html", "_blank");
 }
 
 window.onload = async () => {
