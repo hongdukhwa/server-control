@@ -49,8 +49,6 @@ function setServerState(online) {
       document.getElementById(s+'-stop').disabled = false;
     });
     
-    document.getElementById('btn-projects').disabled = false;
-    document.getElementById('btn-webui').disabled = false;
     
     setLinksState(true);
   } else {
@@ -67,8 +65,6 @@ function setServerState(online) {
       document.getElementById(s+'-dot').className = 'svc-dot';
     });
     
-    document.getElementById('btn-projects').disabled = true;
-    document.getElementById('btn-webui').disabled = true;
     
     setLinksState(false);
   }
