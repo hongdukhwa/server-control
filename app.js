@@ -5,7 +5,7 @@
 
 const TOKEN = "daniel2024!";
 const PW = "0444";
-const API = (typeof CONFIG !== "undefined") ? CONFIG.api : "https://honglab.store/api";
+const API = "https://honglab.store/api";
 const GH_TOKEN = 'ghp_' + 'Xu3Qx7Fr8csezATdJ7tPAmKwmvdnfS3Gg6T7';
 const GH_URL = 'https://api.github.com/repos/hongdukhwa/server-control/actions/workflows/main.yml/dispatches';
 
@@ -136,7 +136,15 @@ async function powerOn() {
   if (!checkPw('서버 켜기')) return;
   showOverlay('서버 부팅중...', 'Wake-on-LAN 신호 전송 중 (약 1분 소요)');
   try {
-    await fetch(API + '/wol?token=' + TOKEN);
+    await fetch(GH_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': 'token ' + GH_TOKEN,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ref: 'main'})
+    });
     pollCount = 0;
     pollInterval = setInterval(async () => {
       pollCount++;
