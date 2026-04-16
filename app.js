@@ -128,6 +128,7 @@ function checkAllServices() {
   serviceCheck('fooocus');
   serviceCheck('fooocus_ui');
   serviceCheck('openwebui');
+  serviceCheck('kokoro');
   updateVram();
 }
 

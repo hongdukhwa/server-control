@@ -78,6 +78,15 @@
       </div>
     </div>
     <div class="service-row">
+      <div class="svc-dot checking" id="kokoro-dot"></div>
+      <div class="svc-name">Kokoro TTS</div>
+      <div class="svc-btns">
+        <button class="svc-btn svc-start" id="kokoro-start" onclick="serviceCtrl('kokoro','start','Kokoro 시작중...')" disabled>시작</button>
+        <button class="svc-btn svc-stop" id="kokoro-stop" onclick="serviceCtrl('kokoro','stop','Kokoro 종료중...')" disabled>종료</button>
+        <button class="svc-btn svc-chk" onclick="serviceCheck('kokoro')">확인</button>
+      </div>
+    </div>
+    <div class="service-row">
       <div class="svc-dot checking" id="fooocus-dot"></div>
       <div class="svc-name">Fooocus API</div>
       <div class="svc-btns">
