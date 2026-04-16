@@ -126,6 +126,7 @@ function checkAllServices() {
   serviceCheck('ollama');
   serviceCheck('openclaw');
   serviceCheck('fooocus');
+  serviceCheck('fooocus_ui');
   serviceCheck('openwebui');
   updateVram();
 }
