@@ -213,14 +213,16 @@ async function ollamaStop() {
 async function serviceCtrl(service, action, overlayText) {
   const actionKo = action === 'start' ? '시작' : '종료';
   if (!checkPw(service + ' ' + actionKo)) return;
-  showOverlay(overlayText, '');
+  const delay = (service === 'fooocus' || service === 'fooocus_ui') ? 30000 : 3000;
+  const subText = (service === 'fooocus' || service === 'fooocus_ui') ? '약 30초 소요됩니다...' : '잠시만 기다려주세요';
+  showOverlay(overlayText, subText);
   try {
     await fetch(API + '/' + service + '/' + action + '?token=' + TOKEN);
     setTimeout(async () => {
       await serviceCheck(service);
       await updateVram();
       hideOverlay();
-    }, 3000);
+    }, delay);
   } catch(e) {
     hideOverlay();
     alert('서버 연결 실패');
