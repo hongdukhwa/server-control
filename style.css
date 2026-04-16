@@ -56,8 +56,8 @@ body::after {
   padding: 13px 18px 10px;
   border-bottom: 1px solid rgba(255,255,255,0.08);
 }
-.power-inner { padding: 15px 18px; }
-.power-status-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.power-inner { padding: 4px 18px; }
+.power-status-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
 .status-dot {
   width: 18px; height: 18px; border-radius: 50%;
   background: #4b5563; transition: all 0.4s; flex-shrink: 0;
@@ -100,13 +100,13 @@ button:disabled {
   background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.9);
   border: 2px solid rgba(255,255,255,0.35);
   border-radius: 14px; padding: 15px 14px;
-  font-size: 12px; font-weight: 800; font-family: 'Nunito', sans-serif;
+  font-size: 13px; font-weight: 800; font-family: 'Nunito', sans-serif;
   cursor: pointer; transition: all 0.2s; white-space: nowrap;
 }
 .btn-check-power:active { background: rgba(255,255,255,0.2); }
 .service-row {
   display: flex; align-items: center;
-  padding: 13px 18px;
+  padding: 4px 18px;
   border-bottom: 1px solid rgba(255,255,255,0.07);
   gap: 12px;
 }
@@ -121,7 +121,7 @@ button:disabled {
 .svc-name { font-size: 14px; font-weight: 900; color: #fff; width: 96px; flex-shrink: 0; }
 .svc-btns { display: flex; gap: 7px; flex: 1; }
 .svc-btn {
-  flex: 1; padding: 10px 0; border-radius: 11px;
+  flex: 1; padding: 4px 0; border-radius: 9px;
   font-size: 13px; font-weight: 800; font-family: 'Nunito', sans-serif;
   cursor: pointer; transition: all 0.15s;
 }
