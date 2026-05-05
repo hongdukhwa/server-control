@@ -44,7 +44,7 @@ function setServerState(online) {
     btnOff.disabled = false;
     document.getElementById('nginx-start').disabled = false;
     document.querySelectorAll('.svc-chk').forEach(btn => btn.disabled = false);
-    ['ollama','openclaw','fooocus','fooocus_ui','openwebui'].forEach(s => {
+    ['ollama','openclaw','fooocus','fooocus_ui','openwebui','apache'].forEach(s => {
       document.getElementById(s+'-start').disabled = false;
       document.getElementById(s+'-stop').disabled = false;
     });
@@ -59,7 +59,7 @@ function setServerState(online) {
     document.getElementById('nginx-start').disabled = true;
     document.getElementById('nginx-dot').className = 'svc-dot';
     document.querySelectorAll('.svc-chk').forEach(btn => btn.disabled = true);
-    ['ollama','openclaw','fooocus','fooocus_ui','openwebui'].forEach(s => {
+    ['ollama','openclaw','fooocus','fooocus_ui','openwebui','apache'].forEach(s => {
       document.getElementById(s+'-start').disabled = true;
       document.getElementById(s+'-stop').disabled = true;
       document.getElementById(s+'-dot').className = 'svc-dot';
@@ -129,6 +129,7 @@ function checkAllServices() {
   serviceCheck('fooocus_ui');
   serviceCheck('openwebui');
   serviceCheck('kokoro');
+  serviceCheck('apache');
   updateVram();
 }
 

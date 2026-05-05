@@ -48,6 +48,15 @@
       </div>
     </div>
     <div class="service-row">
+      <div class="svc-dot checking" id="apache-dot"></div>
+      <div class="svc-name">Apache</div>
+      <div class="svc-btns">
+        <button class="svc-btn svc-start" id="apache-start" onclick="serviceCtrl('apache','start','Apache 시작중...')" disabled>시작</button>
+        <button class="svc-btn svc-stop" id="apache-stop" onclick="serviceCtrl('apache','stop','Apache 종료중...')" disabled>종료</button>
+        <button class="svc-btn svc-chk" onclick="serviceCheck('apache')">확인</button>
+      </div>
+    </div>
+    <div class="service-row">
       <div class="svc-dot checking" id="ollama-dot"></div>
       <div class="svc-name">Ollama</div>
       <div class="svc-btns">
@@ -106,6 +115,6 @@
   
   </div>
 
-  <script src="app.js?v=17"></script>
+  <script src="app.js?v=18"></script>
 </body>
 </html>
