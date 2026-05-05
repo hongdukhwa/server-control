@@ -3,13 +3,26 @@
    Hong Server Control Panel
    ============================================================ */
 
-const TOKEN = "daniel2024!";
-const PW = "0444";
 const API = "https://honglab.store/api";
-const GH_TOKEN = 'ghp_' + 'Xu3Qx7Fr8csezATdJ7tPAmKwmvdnfS3Gg6T7';
 const GH_URL = 'https://api.github.com/repos/hongdukhwa/server-control/actions/workflows/main.yml/dispatches';
 
+function getSecrets() {
+  let TOKEN = localStorage.getItem('SERVER_TOKEN');
+  let PW = localStorage.getItem('SERVER_PW');
+  let GH_TOKEN = localStorage.getItem('SERVER_GH_TOKEN');
+  if (!TOKEN || !PW || !GH_TOKEN) {
+    TOKEN = prompt('서버 API 토큰:');
+    PW = prompt('제어판 비밀번호:');
+    GH_TOKEN = prompt('GitHub 토큰:');
+    localStorage.setItem('SERVER_TOKEN', TOKEN);
+    localStorage.setItem('SERVER_PW', PW);
+    localStorage.setItem('SERVER_GH_TOKEN', GH_TOKEN);
+  }
+  return { TOKEN, PW, GH_TOKEN };
+}
+
 function checkPw(action) {
+  const { PW } = getSecrets();
   const pw = prompt('🔒 비밀번호를 입력하세요\n(' + action + ')');
   return pw === PW;
 }
@@ -142,7 +155,7 @@ async function powerOn() {
     await fetch(GH_URL, {
       method: 'POST',
       headers: {
-        'Authorization': 'token ' + GH_TOKEN,
+        'Authorization': 'token ' + getSecrets().GH_TOKEN,
         'Accept': 'application/vnd.github.v3+json',
         'Content-Type': 'application/json'
       },
@@ -177,7 +190,7 @@ async function powerOn() {
 async function powerOff() {
   if (!checkPw('서버 끄기')) return;
   showOverlay('서버 종료중...', '');
-  try { await fetch(API + '/shutdown?token=' + TOKEN); } catch(e) {}
+  try { await fetch(API + '/shutdown?token=' + getSecrets().TOKEN); } catch(e) {}
   setTimeout(() => { hideOverlay(); setServerState(false); }, 4000);
 }
 
@@ -191,17 +204,17 @@ async function ollamaStop() {
     const data = await res.json();
     if (data.status === 'online') {
       // openclaw 먼저 종료
-      await fetch(API + '/openclaw/stop?token=' + TOKEN);
+      await fetch(API + '/openclaw/stop?token=' + getSecrets().TOKEN);
       await new Promise(r => setTimeout(r, 3000));
       setSvcState('openclaw', false);
     }
   } catch(e) {}
   // openwebui 종료
-  try { await fetch(API + '/openwebui/stop?token=' + TOKEN); } catch(e) {}
+  try { await fetch(API + '/openwebui/stop?token=' + getSecrets().TOKEN); } catch(e) {}
   setSvcState('openwebui', false);
   // ollama 종료
   try {
-    await fetch(API + '/ollama/stop?token=' + TOKEN);
+    await fetch(API + '/ollama/stop?token=' + getSecrets().TOKEN);
     setTimeout(async () => {
       await serviceCheck('ollama');
       hideOverlay();
@@ -219,7 +232,7 @@ async function serviceCtrl(service, action, overlayText) {
   const subText = (service === 'fooocus' || service === 'fooocus_ui') ? '약 30초 소요됩니다...' : '잠시만 기다려주세요';
   showOverlay(overlayText, subText);
   try {
-    await fetch(API + '/' + service + '/' + action + '?token=' + TOKEN);
+    await fetch(API + '/' + service + '/' + action + '?token=' + getSecrets().TOKEN);
     setTimeout(async () => {
       await serviceCheck(service);
       await updateVram();
