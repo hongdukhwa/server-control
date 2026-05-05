@@ -188,7 +188,8 @@ async function powerOn() {
 }
 
 async function powerOff() {
-  if (!await checkPw('서버 끄기')) return;
+  const ok = await checkPw('서버 끄기');
+  if (!ok) return;
   showOverlay('서버 종료중...', '');
   try { await fetch(API + '/shutdown?token=' + TOKEN); } catch(e) {}
   setTimeout(() => { hideOverlay(); setServerState(false); }, 4000);
