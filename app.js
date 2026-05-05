@@ -6,25 +6,25 @@
 const API = "https://honglab.store/api";
 const GH_URL = 'https://api.github.com/repos/hongdukhwa/server-control/actions/workflows/main.yml/dispatches';
 
-function getSecrets() {
-  let TOKEN = localStorage.getItem('SERVER_TOKEN');
-  let PW = localStorage.getItem('SERVER_PW');
-  let GH_TOKEN = localStorage.getItem('SERVER_GH_TOKEN');
-  if (!TOKEN || !PW || !GH_TOKEN) {
-    TOKEN = prompt('서버 API 토큰:');
-    PW = prompt('제어판 비밀번호:');
-    GH_TOKEN = prompt('GitHub 토큰:');
-    localStorage.setItem('SERVER_TOKEN', TOKEN);
-    localStorage.setItem('SERVER_PW', PW);
-    localStorage.setItem('SERVER_GH_TOKEN', GH_TOKEN);
+const TOKEN = "daniel2024!";
+const GH_TOKEN = 'ghp_' + 'etO0VxvAAKZoG8Riw3aHylPy8WtPf43fDWOl';
+const POWER_ON_PW = "1111";
+
+async function checkPw(action) {
+  const pw = prompt('🔒 비밀번호를 입력하세요\n(' + action + ')');
+  if (!pw) return false;
+  try {
+    const res = await fetch(API + '/verify?pw=' + pw + '&token=' + TOKEN, { signal: AbortSignal.timeout(3000) });
+    const data = await res.json();
+    return data.valid === true;
+  } catch(e) {
+    return false;
   }
-  return { TOKEN, PW, GH_TOKEN };
 }
 
-function checkPw(action) {
-  const { PW } = getSecrets();
-  const pw = prompt('🔒 비밀번호를 입력하세요\n(' + action + ')');
-  return pw === PW;
+function checkPowerOnPw() {
+  const pw = prompt('🔒 서버 켜기 비밀번호:');
+  return pw === POWER_ON_PW;
 }
 
 function showOverlay(text, sub) {
@@ -149,13 +149,13 @@ function checkAllServices() {
 let pollInterval = null, pollCount = 0;
 
 async function powerOn() {
-  if (!checkPw('서버 켜기')) return;
+  if (!checkPowerOnPw()) return;
   showOverlay('서버 부팅중...', 'Wake-on-LAN 신호 전송 중 (약 1분 소요)');
   try {
     await fetch(GH_URL, {
       method: 'POST',
       headers: {
-        'Authorization': 'token ' + getSecrets().GH_TOKEN,
+        'Authorization': 'token ' + GH_TOKEN,
         'Accept': 'application/vnd.github.v3+json',
         'Content-Type': 'application/json'
       },
@@ -190,7 +190,7 @@ async function powerOn() {
 async function powerOff() {
   if (!checkPw('서버 끄기')) return;
   showOverlay('서버 종료중...', '');
-  try { await fetch(API + '/shutdown?token=' + getSecrets().TOKEN); } catch(e) {}
+  try { await fetch(API + '/shutdown?token=' + TOKEN); } catch(e) {}
   setTimeout(() => { hideOverlay(); setServerState(false); }, 4000);
 }
 
@@ -204,17 +204,17 @@ async function ollamaStop() {
     const data = await res.json();
     if (data.status === 'online') {
       // openclaw 먼저 종료
-      await fetch(API + '/openclaw/stop?token=' + getSecrets().TOKEN);
+      await fetch(API + '/openclaw/stop?token=' + TOKEN);
       await new Promise(r => setTimeout(r, 3000));
       setSvcState('openclaw', false);
     }
   } catch(e) {}
   // openwebui 종료
-  try { await fetch(API + '/openwebui/stop?token=' + getSecrets().TOKEN); } catch(e) {}
+  try { await fetch(API + '/openwebui/stop?token=' + TOKEN); } catch(e) {}
   setSvcState('openwebui', false);
   // ollama 종료
   try {
-    await fetch(API + '/ollama/stop?token=' + getSecrets().TOKEN);
+    await fetch(API + '/ollama/stop?token=' + TOKEN);
     setTimeout(async () => {
       await serviceCheck('ollama');
       hideOverlay();
@@ -232,7 +232,7 @@ async function serviceCtrl(service, action, overlayText) {
   const subText = (service === 'fooocus' || service === 'fooocus_ui') ? '약 30초 소요됩니다...' : '잠시만 기다려주세요';
   showOverlay(overlayText, subText);
   try {
-    await fetch(API + '/' + service + '/' + action + '?token=' + getSecrets().TOKEN);
+    await fetch(API + '/' + service + '/' + action + '?token=' + TOKEN);
     setTimeout(async () => {
       await serviceCheck(service);
       await updateVram();
