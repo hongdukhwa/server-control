@@ -188,7 +188,7 @@ async function powerOn() {
 }
 
 async function powerOff() {
-  if (!checkPw('서버 끄기')) return;
+  if (!await checkPw('서버 끄기')) return;
   showOverlay('서버 종료중...', '');
   try { await fetch(API + '/shutdown?token=' + TOKEN); } catch(e) {}
   setTimeout(() => { hideOverlay(); setServerState(false); }, 4000);
@@ -196,7 +196,7 @@ async function powerOff() {
 
 /* ollama 종료 - openclaw 먼저 종료 후 ollama 종료 */
 async function ollamaStop() {
-  if (!checkPw('Ollama 종료')) return;
+  if (!await checkPw('Ollama 종료')) return;
   showOverlay('Ollama 종료중...', 'OpenClaw 먼저 종료 후 Ollama 종료');
   try {
     // openclaw 상태 확인
@@ -227,7 +227,7 @@ async function ollamaStop() {
 
 async function serviceCtrl(service, action, overlayText) {
   const actionKo = action === 'start' ? '시작' : '종료';
-  if (!checkPw(service + ' ' + actionKo)) return;
+  if (!await checkPw(service + ' ' + actionKo)) return;
   const delay = (service === 'fooocus' || service === 'fooocus_ui') ? 30000 : 3000;
   const subText = (service === 'fooocus' || service === 'fooocus_ui') ? '약 30초 소요됩니다...' : '잠시만 기다려주세요';
   showOverlay(overlayText, subText);
