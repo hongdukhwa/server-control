@@ -57,7 +57,7 @@ function setServerState(online) {
     btnOff.disabled = false;
     document.getElementById('nginx-start').disabled = false;
     document.querySelectorAll('.svc-chk').forEach(btn => btn.disabled = false);
-    ['ollama','openclaw','fooocus','fooocus_ui','openwebui','apache'].forEach(s => {
+    ['ollama','hermes','fooocus','fooocus_ui','openwebui','apache'].forEach(s => {
       document.getElementById(s+'-start').disabled = false;
       document.getElementById(s+'-stop').disabled = false;
     });
@@ -72,7 +72,7 @@ function setServerState(online) {
     document.getElementById('nginx-start').disabled = true;
     document.getElementById('nginx-dot').className = 'svc-dot';
     document.querySelectorAll('.svc-chk').forEach(btn => btn.disabled = true);
-    ['ollama','openclaw','fooocus','fooocus_ui','openwebui','apache'].forEach(s => {
+    ['ollama','hermes','fooocus','fooocus_ui','openwebui','apache'].forEach(s => {
       document.getElementById(s+'-start').disabled = true;
       document.getElementById(s+'-stop').disabled = true;
       document.getElementById(s+'-dot').className = 'svc-dot';
@@ -137,7 +137,7 @@ async function serviceCheck(service) {
 function checkAllServices() {
   serviceCheck('nginx');
   serviceCheck('ollama');
-  serviceCheck('openclaw');
+  serviceCheck('hermes');
   serviceCheck('fooocus');
   serviceCheck('fooocus_ui');
   serviceCheck('openwebui');
@@ -195,19 +195,19 @@ async function powerOff() {
   setTimeout(() => { hideOverlay(); setServerState(false); }, 4000);
 }
 
-/* ollama 종료 - openclaw 먼저 종료 후 ollama 종료 */
+/* ollama 종료 - hermes 먼저 종료 후 ollama 종료 */
 async function ollamaStop() {
   if (!await checkPw('Ollama 종료')) return;
-  showOverlay('Ollama 종료중...', 'OpenClaw 먼저 종료 후 Ollama 종료');
+  showOverlay('Ollama 종료중...', 'hermes 먼저 종료 후 Ollama 종료');
   try {
-    // openclaw 상태 확인
-    const res = await fetch(API + '/openclaw/status', { signal: AbortSignal.timeout(4000) });
+    // hermes 상태 확인
+    const res = await fetch(API + '/hermes/status', { signal: AbortSignal.timeout(4000) });
     const data = await res.json();
     if (data.status === 'online') {
-      // openclaw 먼저 종료
-      await fetch(API + '/openclaw/stop?token=' + TOKEN);
+      // hermes 먼저 종료
+      await fetch(API + '/hermes/stop?token=' + TOKEN);
       await new Promise(r => setTimeout(r, 3000));
-      setSvcState('openclaw', false);
+      setSvcState('hermes', false);
     }
   } catch(e) {}
   // openwebui 종료
