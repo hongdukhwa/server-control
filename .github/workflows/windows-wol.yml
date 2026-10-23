@@ -1,0 +1,66 @@
+name: Windows PC WOL
+
+on:
+  workflow_dispatch:
+  issues:
+    types: [opened]
+
+permissions: {}
+
+jobs:
+  wake-windows:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'issues' &&
+       github.event.issue.user.id == 116593291 &&
+       github.event.issue.title == '[WOL] Windows-PC')
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Request Windows wake from existing ipTIME router
+        env:
+          ROUTER_PW: ${{ secrets.ROUTER_PW }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os
+          import re
+          from urllib.parse import urlencode
+          from urllib.request import Request, urlopen
+
+          # Only the already-configured router secret is consumed.
+          # Never print credentials, sessions, router responses, or source files.
+          password = os.environ.get("ROUTER_PW", "")
+          if not password:
+              raise SystemExit("router credential unavailable")
+
+          router = "http://daniel-server.iptime.org:8088"
+          login = Request(
+              router + "/sess-bin/login_handler.cgi",
+              data=urlencode({"username": "admin", "passwd": password}).encode("ascii"),
+              method="POST",
+          )
+          with urlopen(login, timeout=20) as response:
+              html = response.read(65536).decode("utf-8", errors="replace")
+          match = re.search(r"setCookie\('([A-Za-z0-9]+)'\)", html)
+          if not match:
+              raise SystemExit("router login session unavailable")
+
+          wake = Request(
+              router + "/sess-bin/timepro.cgi",
+              data=urlencode({
+                  "tmenu": "iframe",
+                  "smenu": "expertconfwollist",
+                  "nomore": "0",
+                  "act": "wake",
+                  "wakeupchk": "04:42:1A:AC:70:CB",
+              }).encode("ascii"),
+              headers={"Cookie": "efm_session_id=" + match.group(1)},
+              method="POST",
+          )
+          with urlopen(wake, timeout=20) as response:
+              if response.status != 200:
+                  raise SystemExit("router rejected WOL request")
+          print("Windows WOL request submitted; physical startup needs confirmation.")
+          PY
