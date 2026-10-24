@@ -1,12 +1,9 @@
 name: Linux Server Shutdown (Direct API)
-
 on:
   issues:
     types: [opened]
-
 permissions:
   contents: read
-
 jobs:
   shutdown-linux:
     if: >-
@@ -15,72 +12,61 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-      - name: Read existing server-control client configuration
+      - name: Load existing server control configuration
         uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Send shutdown directly to Linux server API
+      - name: Request shutdown by verified HTTPS
         env:
           CONTROL_API_TOKEN: ${{ secrets.CONTROL_API_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
           python3 - <<'PY'
-          import os
-          import re
-          import sys
+          import json, os, re, socket, subprocess
           from pathlib import Path
-          from urllib.parse import quote
-          from urllib.request import Request, urlopen, build_opener, HTTPRedirectHandler
-          from urllib.error import HTTPError
-
-          # Prefer a private GitHub Actions secret when one is configured.
-          token = os.environ.get("CONTROL_API_TOKEN", "")
-          if not token:
-              # Backward compatibility with the owner's EXISTING server-control UI:
-              # read the constant locally; never print the credential.
-              js = Path("app.js").read_text(encoding="utf-8")
-              match = re.search(
-                  r"""(?m)^\s*const\s+TOKEN\s*=\s*(?:'([^'\r\n]+)'|"([^"\r\n]+)")\s*;""",
-                  js
-              )
-              if not match:
-                  raise SystemExit("existing_server_control_token_unavailable")
-              token = next(g for g in match.groups() if g is not None)
-          if not (4 <= len(token) <= 160):
-              raise SystemExit("server_control_token_invalid")
-
-          # Never follow redirects with an auth token in a URL.
-          class NoRedirect(HTTPRedirectHandler):
-              def redirect_request(self, request, fp, code, msg, headers, newurl):
-                  return None
-          opener = build_opener(NoRedirect())
-
-          # Reach the server directly, no Windows PC in the control path.
-          api = "https://honglab.store/api"
+          js=Path("app.js").read_text(encoding="utf-8")
+          tok=os.environ.get("CONTROL_API_TOKEN", "")
+          if not tok:
+              m=re.search(r'''(?m)^\s*const\s+TOKEN\s*=\s*(?:'([^'\r\n]+)'|"([^"\r\n]+)")\s*;''',js)
+              if not m: raise SystemExit("existing_token_unavailable")
+              tok=next(g for g in m.groups() if g is not None)
+          if not (4<=len(tok)<=160): raise SystemExit("invalid_token")
+          base=["curl","-sS","--connect-timeout","6","--max-time","14","--compressed",
+                "-H","User-Agent: Mozilla/5.0","-H","Accept: application/json"]
+          targets=[("public",[],"https://honglab.store/api")]
           try:
-              with opener.open(Request(api + "/status"), timeout=12) as response:
-                  print("Linux control API reached; status HTTP", response.status)
-          except HTTPError as error:
-              print("Linux status API HTTP", error.code)
+              ips={x[4][0] for x in socket.getaddrinfo("daniel-server.iptime.org",443,type=socket.SOCK_STREAM)}
+              for ip in sorted(ips):
+                  if ":" not in ip:
+                      targets.append(("origin",["--resolve","honglab.store:443:"+ip],"https://honglab.store/api"))
+          except OSError:
+              print("origin_dns_unavailable")
+          targets.append(("legacy",[],"https://daniel-server.iptime.org/api"))
+          selected=None
+          for name,extra,api in targets:
+              p=subprocess.run(base+extra+["-w","\n%{http_code}",api+"/status"],capture_output=True,timeout=18)
+              if p.returncode:
+                  print("probe",name,"TLS_or_network_unavailable")
+                  continue
+              payload,_,status=p.stdout.rpartition(b"\n")
+              try: data=json.loads(payload)
+              except (ValueError,UnicodeError): data={}
+              if status.strip()==b"200" and data.get("status")=="online":
+                  selected=(name,extra,api)
+                  print("probe",name,"online")
+                  break
+              print("probe",name,"http",status.decode(errors="replace")[:3],"not_verified")
+          if selected is None: raise SystemExit("no_verified_secure_API_route")
+          name,extra,api=selected
+          p=subprocess.run(base+extra+["-G","--data-urlencode","token="+tok,
+              "-o","/dev/null","-w","%{http_code}",api+"/shutdown"],
+              capture_output=True,timeout=20)
+          if p.returncode:
+              print("shutdown",name,"request_failed_or_connection_closed")
               raise SystemExit(1)
-          except Exception as error:
-              print("Linux status API unreachable:", type(error).__name__)
-              raise SystemExit(1)
-
-          url = api + "/shutdown?token=" + quote(token, safe="")
-          try:
-              with opener.open(Request(url, headers={"Cache-Control": "no-store"}), timeout=20) as response:
-                  print("Direct Linux shutdown request API HTTP", response.status)
-                  if response.status != 200:
-                      raise SystemExit(1)
-              print("SHUTDOWN_REQUEST_ACCEPTED; physical power-off remains to be checked")
-          except HTTPError as error:
-              print("Shutdown API HTTP", error.code)
-              raise SystemExit(1)
-          except Exception as error:
-              # Server may drop connection while stopping; do not overclaim.
-              print("Shutdown API connection ended:", type(error).__name__,
-                    "; physical power-off unconfirmed")
-              raise SystemExit(1)
+          code=p.stdout.decode(errors="replace").strip()
+          print("shutdown",name,"HTTP",code)
+          if code!="200": raise SystemExit("shutdown_API_rejected")
+          print("SHUTDOWN_REQUEST_ACCEPTED; physical power-off still needs confirmation")
           PY
