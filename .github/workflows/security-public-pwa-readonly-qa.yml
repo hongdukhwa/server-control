@@ -1,0 +1,58 @@
+name: Security - Public PWA Read Only QA
+on:
+  issues:
+    types: [opened]
+permissions:
+  contents: read
+jobs:
+  pwa-qa:
+    if: >-
+      github.event.issue.user.id == 116593291 &&
+      github.event.issue.title == '[SECURITY] Verify public PWA'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Validate JS syntax and current repository secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check app.js
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          src=Path('app.js').read_text(encoding='utf-8')
+          print('CURRENT_REPO_GH_PAT_CONSTANT',bool(re.search(r'(?m)^\s*const\s+GH_TOKEN\s*=',src)))
+          print('CURRENT_REPO_API_TOKEN_CONSTANT',bool(re.search(r'(?m)^\s*const\s+TOKEN\s*=',src)))
+          print('CURRENT_REPO_WOL_OWNER_ISSUE', '[WOL] Linux-Server' in src)
+          print('JS_SYNTAX', 'PASS')
+          PY
+      - name: Check externally published JS without disclosing credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from urllib.request import Request, urlopen
+          from urllib.error import HTTPError, URLError
+          import re
+          targets=[
+              ("github-pages","https://hongdukhwa.github.io/server-control/app.js"),
+              ("custom-pwa","https://honglab.store/pwa/app.js"),
+          ]
+          for label,url in targets:
+              try:
+                  req=Request(url,headers={'User-Agent':'GURUNET-ReadOnly-Check/1.0'})
+                  with urlopen(req,timeout=15) as res:
+                      status=res.status
+                      body=res.read(300000).decode('utf-8',errors='replace')
+                  print(label,'HTTP',status,
+                        'HAS_GH_PAT_CONSTANT',bool(re.search(r'(?m)^\s*const\s+GH_TOKEN\s*=',body)),
+                        'HAS_API_TOKEN_CONSTANT',bool(re.search(r'(?m)^\s*const\s+TOKEN\s*=',body)),
+                        'HAS_OWNER_WOL_LINK',('[WOL] Linux-Server' in body))
+              except HTTPError as ex:
+                  print(label,'HTTP',ex.code,'unverified')
+              except (URLError,OSError,ValueError) as ex:
+                  print(label,'UNREACHABLE',type(ex).__name__)
+          PY
