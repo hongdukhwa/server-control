@@ -4,11 +4,12 @@
    ============================================================ */
 
 const API = "https://honglab.store/api";
-const GH_URL = 'https://api.github.com/repos/hongdukhwa/server-control/actions/workflows/main.yml/dispatches';
+// Power-on uses the owner's GitHub login; never embed personal access tokens.
+const OWNER_GITHUB_NEW_ISSUE = 'https://github.com/hongdukhwa/server-control/issues/new';
 
 const TOKEN = "daniel2024!";
-const GH_TOKEN = 'ghp_' + 'etO0VxvAAKZoG8Riw3aHylPy8WtPf43fDWOl';
-const POWER_ON_PW = "1111";
+
+
 
 async function checkPw(action) {
   const pw = prompt('🔒 비밀번호를 입력하세요\n(' + action + ')');
@@ -20,11 +21,6 @@ async function checkPw(action) {
   } catch(e) {
     return false;
   }
-}
-
-function checkPowerOnPw() {
-  const pw = prompt('🔒 서버 켜기 비밀번호:');
-  return pw === POWER_ON_PW;
 }
 
 function showOverlay(text, sub) {
@@ -149,42 +145,16 @@ function checkAllServices() {
 
 let pollInterval = null, pollCount = 0;
 
-async function powerOn() {
-  if (!checkPowerOnPw()) return;
-  showOverlay('서버 부팅중...', 'Wake-on-LAN 신호 전송 중 (약 1분 소요)');
-  try {
-    await fetch(GH_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': 'token ' + GH_TOKEN,
-        'Accept': 'application/vnd.github.v3+json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ref: 'main'})
-    });
-    pollCount = 0;
-    pollInterval = setInterval(async () => {
-      pollCount++;
-      try {
-        const res = await fetch(API + '/status', { signal: AbortSignal.timeout(3000) });
-        const data = await res.json();
-        if (data.status === 'online') {
-          clearInterval(pollInterval);
-          hideOverlay();
-          setServerState(true);
-          checkAllServices();
-        }
-      } catch(e) {}
-      if (pollCount >= 24) {
-        clearInterval(pollInterval);
-        hideOverlay();
-        alert('서버가 응답하지 않습니다.');
-        checkServerStatus();
-      }
-    }, 5000);
-  } catch(e) {
-    hideOverlay();
-    alert('신호 전송 실패');
+function powerOn() {
+  // GitHub itself authenticates the owner. No token, PIN, or GitHub API credentials
+  // are ever sent to the browser. Submit the prefilled Issue to dispatch WOL.
+  const title = '[WOL] Linux-Server';
+  const body = 'Owner-requested Linux Wake-on-LAN. Trigger existing fixed GitHub Actions WOL workflow.';
+  const url = OWNER_GITHUB_NEW_ISSUE + '?title=' + encodeURIComponent(title) +
+    '&body=' + encodeURIComponent(body);
+  const popup = window.open(url, '_blank', 'noopener,noreferrer');
+  if (popup === null) {
+    alert('GitHub 창을 열 수 없습니다. 팝업 차단 설정을 확인해 주세요.');
   }
 }
 
