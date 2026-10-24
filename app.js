@@ -7,19 +7,14 @@ const API = "https://honglab.store/api";
 // Power-on uses the owner's GitHub login; never embed personal access tokens.
 const OWNER_GITHUB_NEW_ISSUE = 'https://github.com/hongdukhwa/server-control/issues/new';
 
-const TOKEN = "daniel2024!";
-
-
-
-async function checkPw(action) {
-  const pw = prompt('🔒 비밀번호를 입력하세요\n(' + action + ')');
-  if (!pw) return false;
-  try {
-    const res = await fetch(API + '/verify?pw=' + pw + '&token=' + TOKEN, { signal: AbortSignal.timeout(3000) });
-    const data = await res.json();
-    return data.valid === true;
-  } catch(e) {
-    return false;
+// GitHub authenticates the account owner. No API access credentials reside in PWA.
+function requestOwnerAction(title) {
+  const body = 'Owner-requested action from GURUNET Server Control PWA. Verify the title and select Submit new issue.';
+  const url = OWNER_GITHUB_NEW_ISSUE + '?title=' + encodeURIComponent(title) +
+              '&body=' + encodeURIComponent(body);
+  const popup = window.open(url, '_blank', 'noopener,noreferrer');
+  if (popup === null) {
+    alert('GitHub 로그인 창이 차단되었습니다. 팝업 허용 후 다시 실행하세요.');
   }
 }
 
@@ -158,65 +153,34 @@ function powerOn() {
   }
 }
 
-async function powerOff() {
-  const ok = await checkPw('서버 끄기');
-  if (!ok) return;
-  showOverlay('서버 종료중...', '');
-  try { await fetch(API + '/shutdown?token=' + TOKEN); } catch(e) {}
-  setTimeout(() => { hideOverlay(); setServerState(false); }, 4000);
+function powerOff() {
+  requestOwnerAction('[POWER OFF] Linux-Server');
 }
 
-/* ollama 종료 - hermes 먼저 종료 후 ollama 종료 */
-async function ollamaStop() {
-  if (!await checkPw('Ollama 종료')) return;
-  showOverlay('Ollama 종료중...', 'hermes 먼저 종료 후 Ollama 종료');
-  try {
-    // hermes 상태 확인
-    const res = await fetch(API + '/hermes/status', { signal: AbortSignal.timeout(4000) });
-    const data = await res.json();
-    if (data.status === 'online') {
-      // hermes 먼저 종료
-      await fetch(API + '/hermes/stop?token=' + TOKEN);
-      await new Promise(r => setTimeout(r, 3000));
-      setSvcState('hermes', false);
-    }
-  } catch(e) {}
-  // openwebui 종료
-  try { await fetch(API + '/openwebui/stop?token=' + TOKEN); } catch(e) {}
-  setSvcState('openwebui', false);
-  // ollama 종료
-  try {
-    await fetch(API + '/ollama/stop?token=' + TOKEN);
-    setTimeout(async () => {
-      await serviceCheck('ollama');
-      hideOverlay();
-    }, 3000);
-  } catch(e) {
-    hideOverlay();
-    alert('서버 연결 실패');
+// Stopping Ollama keeps the former Hermes/OpenWebUI/Ollama sequence on
+// the authenticated server side.
+function ollamaStop() {
+  requestOwnerAction('[SERVICE] ollama stop');
+}
+
+function serviceCtrl(service, action, overlayText) {
+  const allowed = {
+    nginx: ['start'],
+    apache: ['start', 'stop'],
+    ollama: ['start', 'stop'],
+    hermes: ['start', 'stop'],
+    openwebui: ['start', 'stop'],
+    kokoro: ['start', 'stop'],
+    fooocus: ['start', 'stop'],
+    fooocus_ui: ['start', 'stop'],
+    comfyui: ['start', 'stop']
+  };
+  if (!Object.hasOwn(allowed, service) || !allowed[service].includes(action)) {
+    alert('허용되지 않는 서비스 명령입니다.');
+    return;
   }
+  requestOwnerAction('[SERVICE] ' + service + ' ' + action);
 }
-
-async function serviceCtrl(service, action, overlayText) {
-  const actionKo = action === 'start' ? '시작' : '종료';
-  if (!await checkPw(service + ' ' + actionKo)) return;
-  const delay = (service === 'fooocus' || service === 'fooocus_ui') ? 30000 : 3000;
-  const subText = (service === 'fooocus' || service === 'fooocus_ui') ? '약 30초 소요됩니다...' : '잠시만 기다려주세요';
-  showOverlay(overlayText, subText);
-  try {
-    await fetch(API + '/' + service + '/' + action + '?token=' + TOKEN);
-    setTimeout(async () => {
-      await serviceCheck(service);
-      await updateVram();
-      hideOverlay();
-    }, delay);
-  } catch(e) {
-    hideOverlay();
-    alert('서버 연결 실패');
-  }
-}
-
-
 
 function openWebUI() {
   window.open("http://192.168.0.20:3000", "_blank");
