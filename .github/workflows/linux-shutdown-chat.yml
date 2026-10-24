@@ -1,0 +1,86 @@
+name: Linux Server Shutdown (Direct API)
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: read
+
+jobs:
+  shutdown-linux:
+    if: >-
+      github.event.issue.user.id == 116593291 &&
+      github.event.issue.title == '[POWER OFF] Linux-Server'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Read existing server-control client configuration
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Send shutdown directly to Linux server API
+        env:
+          CONTROL_API_TOKEN: ${{ secrets.CONTROL_API_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os
+          import re
+          import sys
+          from pathlib import Path
+          from urllib.parse import quote
+          from urllib.request import Request, urlopen, build_opener, HTTPRedirectHandler
+          from urllib.error import HTTPError
+
+          # Prefer a private GitHub Actions secret when one is configured.
+          token = os.environ.get("CONTROL_API_TOKEN", "")
+          if not token:
+              # Backward compatibility with the owner's EXISTING server-control UI:
+              # read the constant locally; never print the credential.
+              js = Path("app.js").read_text(encoding="utf-8")
+              match = re.search(
+                  r"""(?m)^\s*const\s+TOKEN\s*=\s*(?:'([^'\r\n]+)'|"([^"\r\n]+)")\s*;""",
+                  js
+              )
+              if not match:
+                  raise SystemExit("existing_server_control_token_unavailable")
+              token = next(g for g in match.groups() if g is not None)
+          if not (4 <= len(token) <= 160):
+              raise SystemExit("server_control_token_invalid")
+
+          # Never follow redirects with an auth token in a URL.
+          class NoRedirect(HTTPRedirectHandler):
+              def redirect_request(self, request, fp, code, msg, headers, newurl):
+                  return None
+          opener = build_opener(NoRedirect())
+
+          # Reach the server directly, no Windows PC in the control path.
+          api = "https://honglab.store/api"
+          try:
+              with opener.open(Request(api + "/status"), timeout=12) as response:
+                  print("Linux control API reached; status HTTP", response.status)
+          except HTTPError as error:
+              print("Linux status API HTTP", error.code)
+              raise SystemExit(1)
+          except Exception as error:
+              print("Linux status API unreachable:", type(error).__name__)
+              raise SystemExit(1)
+
+          url = api + "/shutdown?token=" + quote(token, safe="")
+          try:
+              with opener.open(Request(url, headers={"Cache-Control": "no-store"}), timeout=20) as response:
+                  print("Direct Linux shutdown request API HTTP", response.status)
+                  if response.status != 200:
+                      raise SystemExit(1)
+              print("SHUTDOWN_REQUEST_ACCEPTED; physical power-off remains to be checked")
+          except HTTPError as error:
+              print("Shutdown API HTTP", error.code)
+              raise SystemExit(1)
+          except Exception as error:
+              # Server may drop connection while stopping; do not overclaim.
+              print("Shutdown API connection ended:", type(error).__name__,
+                    "; physical power-off unconfirmed")
+              raise SystemExit(1)
+          PY
