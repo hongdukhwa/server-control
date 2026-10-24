@@ -2,13 +2,22 @@ name: Security - Public PWA Read Only QA
 on:
   issues:
     types: [opened]
+  push:
+    branches: [main]
+    paths:
+      - 'app.js'
+      - 'index.html'
+      - '.github/workflows/pwa-authenticated-services.yml'
+      - '.github/workflows/security-public-pwa-readonly-qa.yml'
 permissions:
   contents: read
 jobs:
   pwa-qa:
     if: >-
-      github.event.issue.user.id == 116593291 &&
-      github.event.issue.title == '[SECURITY] Verify public PWA'
+      github.event_name == 'push' ||
+      (github.event_name == 'issues' &&
+       github.event.issue.user.id == 116593291 &&
+       github.event.issue.title == '[SECURITY] Verify public PWA')
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
