@@ -56,6 +56,30 @@ jobs:
               except (URLError,OSError,ValueError) as ex:
                   print(label,'UNREACHABLE',type(ex).__name__)
           PY
+      - name: Assert no static credentials and all public controls present
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          js=Path("app.js").read_text(encoding="utf-8")
+          html=Path("index.html").read_text(encoding="utf-8")
+          required=["function powerOn()","function powerOff()","function ollamaStop()",
+                    "function serviceCtrl(","async function checkServerStatus()",
+                    "function requestOwnerAction("]
+          forbidden=[r"\bGH_TOKEN\b",r"\bPOWER_ON_PW\b",r"(?m)^\s*const\s+TOKEN\s*=",
+                     r"/shutdown\?token=",r"/verify\?pw="]
+          if any(x not in js for x in required):
+              raise SystemExit("PWA_CONTROL_FUNCTION_MISSING")
+          if any(re.search(x,js) for x in forbidden):
+              raise SystemExit("PWA_STATIC_SECRET_OR_LEGACY_ENDPOINT_FOUND")
+          if "app.js?v=20" not in html:
+              raise SystemExit("PWA_SCRIPT_CACHE_VERSION_MISMATCH")
+          if not Path(".github/workflows/pwa-authenticated-services.yml").exists():
+              raise SystemExit("SERVICE_GATE_WORKFLOW_MISSING")
+          print("PWA_STATIC_SECURITY_GATES_PASS")
+          PY
       - name: Read-only router HTTPS transport probe (no login credentials)
         shell: bash
         run: |
