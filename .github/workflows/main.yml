@@ -3,8 +3,11 @@ name: WoL
 on:
   workflow_dispatch:
 
+permissions: {}
+
 jobs:
   wol:
+    if: github.actor == 'hongdukhwa'
     runs-on: ubuntu-latest
     steps:
       - name: Wake Server
