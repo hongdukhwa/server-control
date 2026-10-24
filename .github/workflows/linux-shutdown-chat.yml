@@ -12,10 +12,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-      - name: Load existing server control configuration
-        uses: actions/checkout@v4
-        with:
-          persist-credentials: false
       - name: Request shutdown by verified HTTPS
         env:
           CONTROL_API_TOKEN: ${{ secrets.CONTROL_API_TOKEN }}
@@ -23,14 +19,9 @@ jobs:
         run: |
           set -euo pipefail
           python3 - <<'PY'
-          import json, os, re, socket, subprocess
-          from pathlib import Path
-          js=Path("app.js").read_text(encoding="utf-8")
+          import json, os, socket, subprocess
           tok=os.environ.get("CONTROL_API_TOKEN", "")
-          if not tok:
-              m=re.search(r'''(?m)^\s*const\s+TOKEN\s*=\s*(?:'([^'\r\n]+)'|"([^"\r\n]+)")\s*;''',js)
-              if not m: raise SystemExit("existing_token_unavailable")
-              tok=next(g for g in m.groups() if g is not None)
+          if not tok: raise SystemExit("CONTROL_API_TOKEN GitHub Secret is not configured")
           if not (4<=len(tok)<=160): raise SystemExit("invalid_token")
           base=["curl","-sS","--connect-timeout","6","--max-time","14","--compressed",
                 "-H","User-Agent: Mozilla/5.0","-H","Accept: application/json"]
