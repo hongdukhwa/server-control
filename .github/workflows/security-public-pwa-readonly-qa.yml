@@ -56,3 +56,19 @@ jobs:
               except (URLError,OSError,ValueError) as ex:
                   print(label,'UNREACHABLE',type(ex).__name__)
           PY
+      - name: Read-only router HTTPS transport probe (no login credentials)
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import ssl
+          import urllib.request
+          import urllib.error
+          u="https://daniel-server.iptime.org:8088/sess-bin/login_handler.cgi"
+          try:
+              with urllib.request.urlopen(u,timeout=10) as r:
+                  print("ROUTER_HTTPS", "VERIFIED", "HTTP",r.status)
+          except urllib.error.HTTPError as e:
+              print("ROUTER_HTTPS", "VERIFIED", "HTTP",e.code)
+          except Exception as e:
+              print("ROUTER_HTTPS", "NOT_VERIFIED",type(e).__name__)
+          PY
