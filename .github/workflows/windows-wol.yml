@@ -10,7 +10,7 @@ permissions: {}
 jobs:
   wake-windows:
     if: >-
-      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_dispatch' && github.actor == 'hongdukhwa') ||
       (github.event_name == 'issues' &&
        github.event.issue.user.id == 116593291 &&
        github.event.issue.title == '[WOL] Windows-PC')
