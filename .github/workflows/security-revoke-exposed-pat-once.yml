@@ -1,77 +1,13 @@
-name: Security - Revoke Previously Exposed GitHub PAT (One Time)
+# One-time legacy PAT revocation completed and verified.
+# See GitHub Actions run 40116967053 (202 accepted; 401 verification).
+# Deliberately inert: do not re-enable this revoker.
+name: Retired One-Time PAT Revocation
 on:
-  push:
-    branches: [main]
-    paths:
-      - .github/workflows/security-revoke-exposed-pat-once.yml
-permissions:
-  contents: read
+  workflow_dispatch:
+permissions: {}
 jobs:
-  revoke:
-    if: >-
-      github.actor == 'hongdukhwa' &&
-      contains(github.event.head_commit.message, 'SECURITY-REVOKE-COMPROMISED-LEGACY-PAT')
+  retired:
+    if: ${{ false }}
     runs-on: ubuntu-latest
-    timeout-minutes: 4
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-      - name: Revoke already exposed legacy browser PAT through GitHub credential revocation API
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          import json,re,subprocess,time
-          from urllib.request import Request, build_opener, HTTPHandler, HTTPSHandler, HTTPRedirectHandler
-          from urllib.error import HTTPError
-          # Read the known former version from git history. DO NOT log source or credentials.
-          old = subprocess.run(
-              ["git","show","f88584fc5edce3f088c5f25dcccc9ab0a398c74b^:app.js"],
-              check=True,capture_output=True,text=True,timeout=12).stdout
-          m = re.search(r"""(?m)^const GH_TOKEN = '([^'\r\n]+)' \+ '([^'\r\n]+)';""",old)
-          if not m:
-              raise SystemExit("OLD_EXPOSED_PAT_NOT_LOCATED; no revocation was performed")
-          token = m.group(1)+m.group(2)
-          if not token.startswith("ghp_") or not 36 <= len(token) <= 120:
-              raise SystemExit("OLD_EXPOSED_PAT_FORMAT_INVALID; no revocation was performed")
-          class RejectRedirect(HTTPRedirectHandler):
-              def redirect_request(self,*args,**kwargs): return None
-          opener=build_opener(HTTPHandler(),HTTPSHandler(),RejectRedirect())
-          url="https://api.github.com/credentials/revoke"
-          headers={"Accept":"application/vnd.github+json",
-                   "Content-Type":"application/json",
-                   "X-GitHub-Api-Version":"2026-03-10",
-                   "User-Agent":"GURUNET-Incident-Response"}
-          data=json.dumps({"credentials":[token]}).encode()
-          req=Request(url,data=data,headers=headers,method="POST")
-          try:
-              with opener.open(req,timeout=18) as r: status=r.status
-          except HTTPError as error:
-              # Never log response body or request headers.
-              raise SystemExit("GITHUB_REVOKE_ENDPOINT_REJECTED_HTTP_"+str(error.code))
-          if status!=202:
-              raise SystemExit("GITHUB_REVOKE_UNEXPECTED_HTTP_"+str(status))
-          print("GITHUB_EXPOSED_PAT_REVOCATION_REQUEST_ACCEPTED_HTTP_202")
-          # Verify authentication fails, without revealing the token.
-          for attempt in range(4):
-              time.sleep(5)
-              check=Request("https://api.github.com/user",
-                            headers={"Accept":"application/vnd.github+json",
-                                     "Authorization":"Bearer "+token,
-                                     "User-Agent":"GURUNET-Incident-Response"},
-                            method="GET")
-              try:
-                  with opener.open(check,timeout=12) as response: check_status=response.status
-              except HTTPError as err: check_status=err.code
-              if check_status==401:
-                  print("GITHUB_EXPOSED_PAT_REVOCATION_VERIFIED_HTTP_401")
-                  break
-              if check_status==200:
-                  print("POST_REVOKE_VERIFICATION_PENDING_ATTEMPT_"+str(attempt+1))
-              else:
-                  print("POST_REVOKE_VERIFICATION_UNCERTAIN_HTTP_"+str(check_status))
-          else:
-              raise SystemExit("REVOCATION_REQUEST_SUBMITTED_BUT_NOT_VERIFIED")
-          PY
+      - run: echo "Legacy credential revoker retired"
