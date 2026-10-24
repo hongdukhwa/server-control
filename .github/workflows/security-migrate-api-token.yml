@@ -1,50 +1,13 @@
-name: Security - Migrate Legacy API Token to GitHub Secret
+# Historical one-time migration completed in GitHub Actions run 40113341483.
+# This file is intentionally disabled. Keep it as a status-only stub so
+# credential migration can never be retriggered by an Issue.
+name: Disabled One-Time Secret Migration
 on:
-  issues:
-    types: [opened]
-permissions:
-  contents: read
+  workflow_dispatch:
+permissions: {}
 jobs:
-  migrate:
-    if: >-
-      github.event.issue.user.id == 116593291 &&
-      github.event.issue.title == '[SECURITY] Migrate API secret'
+  archived:
+    if: ${{ false }}
     runs-on: ubuntu-latest
-    timeout-minutes: 3
     steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - name: Move current published credentials to private GitHub Actions secret
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          import os, re, subprocess, sys
-          from pathlib import Path
-          js = Path("app.js").read_text(encoding="utf-8")
-          a = re.search(r"""(?m)^\s*const\s+TOKEN\s*=\s*(?:'([^'\r\n]+)'|"([^"\r\n]+)")\s*;""", js)
-          b = re.search(r"""(?m)^\s*const\s+GH_TOKEN\s*=\s*'([^'\r\n]+)'\s*\+\s*'([^'\r\n]+)'\s*;""", js)
-          if not a or not b:
-              raise SystemExit("Legacy configuration is not available; no changes made")
-          api = next(g for g in a.groups() if g is not None)
-          pat = "".join(b.groups())
-          if not (api and pat.startswith("ghp_") and 20 < len(pat) < 160):
-              raise SystemExit("Legacy GitHub credential shape not recognized; no changes made")
-          env = os.environ.copy()
-          env.pop("GITHUB_TOKEN", None)
-          env["GH_TOKEN"] = pat
-          cmd = ["gh", "secret", "set", "CONTROL_API_TOKEN",
-                 "--repo", "hongdukhwa/server-control"]
-          p = subprocess.run(cmd, input=(api+"\n").encode(),
-                             capture_output=True, env=env, timeout=55)
-          if p.returncode:
-              # Never print stderr or any secret material.
-              raise SystemExit("SECRET_MIGRATION_REJECTED; repo secret was not confirmed")
-          verify = subprocess.run(
-              ["gh", "secret", "list", "--repo", "hongdukhwa/server-control"],
-              capture_output=True, env=env, timeout=30)
-          if verify.returncode or b"CONTROL_API_TOKEN" not in verify.stdout:
-              raise SystemExit("SECRET_MIGRATION_UNVERIFIED; no proof secret was recorded")
-          print("CONTROL_API_TOKEN_MIGRATED_TO_PRIVATE_ACTIONS_SECRET")
-          PY
+      - run: echo "One-time migration retired"
