@@ -1,0 +1,90 @@
+name: Authenticated PWA Service Control
+
+on:
+  issues:
+    types: [opened]
+
+permissions: {}
+
+jobs:
+  control:
+    if: >-
+      github.event.issue.user.id == 116593291 &&
+      startsWith(github.event.issue.title, '[SERVICE] ')
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Owner-only service control via protected server secret
+        env:
+          CONTROL_API_TOKEN: ${{ secrets.CONTROL_API_TOKEN }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_TIME: ${{ github.event.issue.created_at }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os, re, json, subprocess
+          from datetime import datetime, timezone
+          title = os.environ.get("ISSUE_TITLE", "")
+          recorded = os.environ.get("ISSUE_TIME", "")
+          issued = datetime.fromisoformat(recorded.replace("Z", "+00:00"))
+          age = (datetime.now(timezone.utc) - issued).total_seconds()
+          if not (0 <= age <= 900):
+              raise SystemExit("Request expired; no operation")
+          tok = os.environ.get("CONTROL_API_TOKEN", "")
+          if len(tok) < 4:
+              raise SystemExit("Protected API token not configured")
+          match = re.fullmatch(
+              r"\[SERVICE\] (apache|nginx|ollama|hermes|openwebui|kokoro|fooocus|fooocus_ui|comfyui) (start|stop)",
+              title)
+          if title == "[SERVICE] CHECK":
+              commands = []
+          elif match:
+              service, operation = match.groups()
+              allowed = {
+                  ("nginx", "start"),
+                  ("apache", "start"), ("apache", "stop"),
+                  ("ollama", "start"), ("ollama", "stop"),
+                  ("hermes", "start"), ("hermes", "stop"),
+                  ("openwebui", "start"), ("openwebui", "stop"),
+                  ("kokoro", "start"), ("kokoro", "stop"),
+                  ("fooocus", "start"), ("fooocus", "stop"),
+                  ("fooocus_ui", "start"), ("fooocus_ui", "stop"),
+                  ("comfyui", "start"), ("comfyui", "stop"),
+              }
+              if (service, operation) not in allowed:
+                  raise SystemExit("Command not allowed")
+              commands = [(service, operation)]
+              if service == "ollama" and operation == "stop":
+                  commands = [("hermes","stop"),("openwebui","stop"),("ollama","stop")]
+          else:
+              raise SystemExit("Malformed command")
+          base = "https://honglab.store/api"
+          prefix = ["curl","-sS","--connect-timeout","6","--max-time","18",
+                    "-H","User-Agent: Mozilla/5.0",
+                    "-H","Accept: application/json"]
+          p = subprocess.run(prefix + ["--write-out","\n%{http_code}",base+"/status"],
+                             capture_output=True, timeout=22)
+          if p.returncode:
+              raise SystemExit("Server status unavailable")
+          raw, _, code = p.stdout.rpartition(b"\n")
+          try:
+              online = json.loads(raw).get("status") == "online"
+          except (ValueError, UnicodeDecodeError):
+              online = False
+          if code.strip() != b"200" or not online:
+              raise SystemExit("Server is not confirmed online")
+          print("OWNER_AUTHENTICATED_SERVER_STATUS_OK")
+          for service, operation in commands:
+              p = subprocess.run(
+                  prefix+["-G","--data-urlencode","token="+tok,
+                          "--output","/dev/null","--write-out","%{http_code}",
+                          base+"/"+service+"/"+operation],
+                  capture_output=True, timeout=22)
+              status = p.stdout.decode(errors="replace").strip()
+              if p.returncode or status != "200":
+                  raise SystemExit("API request not accepted: "+service+" "+operation)
+              print("SERVICE_REQUEST_ACCEPTED", service, operation)
+          if not commands:
+              print("READ_ONLY_CHECK_SUCCESS; no control command executed")
+          PY
